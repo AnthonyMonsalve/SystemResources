@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: system_resources
+      POSTGRES_PASSWORD: system_resources
+      POSTGRES_DB: system_resources
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./apps/backend
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DATABASE_URL: postgres://system_resources:system_resources@postgres:5432/system_resources
+      JWT_SECRET: change_me
+      JWT_EXPIRES_IN: 1h
+    depends_on:
+      - postgres
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build:
+      context: ./apps/frontend
+      args:
+        VITE_API_BASE_URL: http://backend:3000
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  postgres_data:
+    driver: local
