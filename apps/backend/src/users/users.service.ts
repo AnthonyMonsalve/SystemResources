@@ -1,8 +1,12 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { User, UserProfile, UserRole } from './entities/user.entity';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { User, UserProfile, UserRole } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -35,7 +39,10 @@ export class UsersService {
     return this.users.find((user) => user.id === id);
   }
 
-  async validateCredentials(email: string, password: string): Promise<UserProfile> {
+  async validateCredentials(
+    email: string,
+    password: string,
+  ): Promise<UserProfile> {
     const user = await this.findByEmail(email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
