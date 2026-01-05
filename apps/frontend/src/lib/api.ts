@@ -1,5 +1,5 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
+const TOKEN_COOKIE = "token-system";
 
 export class ApiError extends Error {
   status: number;
@@ -18,15 +18,30 @@ type RequestOptions = {
   token?: string | null;
 };
 
-export async function apiFetch<T>(
-  path: string,
-  options: RequestOptions = {}
-): Promise<T> {
+export function setTokenCookie(token: string) {
+  document.cookie = `${TOKEN_COOKIE}=${encodeURIComponent(token)}; path=/; sameSite=Lax`;
+}
+
+export function clearTokenCookie() {
+  document.cookie = `${TOKEN_COOKIE}=; path=/; max-age=0; sameSite=Lax`;
+}
+
+export function readTokenCookie(): string | null {
+  const match = document.cookie
+    .split(";")
+    .map((c) => c.trim())
+    .find((c) => c.startsWith(`${TOKEN_COOKIE}=`));
+  if (!match) return null;
+  return decodeURIComponent(match.split("=")[1] ?? "");
+}
+
+export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
-  if (options.token) {
-    headers.Authorization = `Bearer ${options.token}`;
+  const token = options.token ?? readTokenCookie();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
   }
 
   const res = await fetch(`${API_BASE_URL}${path}`, {
@@ -43,19 +58,17 @@ export async function apiFetch<T>(
   return (await res.json()) as T;
 }
 
-async function safeErrorMessage(
-  res: Response
-): Promise<{ message: string; details?: unknown }> {
+async function safeErrorMessage(res: Response): Promise<{ message: string; details?: unknown }> {
   try {
     const data = await res.json();
     const rawMessage =
       Array.isArray(data?.message) && data.message.length > 0
         ? data.message.join(", ")
         : typeof data?.message === "string"
-        ? data.message
-        : typeof data?.error === "string"
-        ? data.error
-        : undefined;
+          ? data.message
+          : typeof data?.error === "string"
+            ? data.error
+            : undefined;
 
     const friendly = mapFriendlyMessage(res.status, rawMessage);
     return { message: friendly, details: data };
@@ -65,8 +78,7 @@ async function safeErrorMessage(
 }
 
 function mapFriendlyMessage(status: number, fallback?: string): string {
-  if (status === 409)
-    return "Ya existe una cuenta registrada con estas credenciales.";
+  if (status === 409) return "Ya existe una cuenta registrada con estas credenciales.";
   if (status === 401) return "Credenciales inválidas.";
   if (status === 400) return "Revisa los datos ingresados.";
   if (status >= 500) return "Error interno, intenta más tarde.";

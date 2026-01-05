@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react';
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { apiFetch } from '../lib/api';
-import type { AuthResponse, UserProfile } from '../types/auth';
+import type { ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { apiFetch, clearTokenCookie, readTokenCookie, setTokenCookie } from "../lib/api";
+import type { AuthResponse, UserProfile } from "../types/auth";
 
 type AuthContextValue = {
   user: UserProfile | null;
@@ -14,10 +14,8 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const STORAGE_KEY = 'sr_auth_token';
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(STORAGE_KEY));
+  const [token, setToken] = useState<string | null>(() => readTokenCookie());
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -31,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async (authToken: string) => {
     try {
-      const profile = await apiFetch<UserProfile>('/auth/profile', { token: authToken });
+      const profile = await apiFetch<UserProfile>("/auth/profile", { token: authToken });
       setUser(profile);
     } catch (err) {
       console.error(err);
@@ -40,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const persistSession = (data: AuthResponse) => {
-    localStorage.setItem(STORAGE_KEY, data.access_token);
+    setTokenCookie(data.access_token);
     setToken(data.access_token);
     setUser(data.user);
   };
@@ -48,8 +46,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async ({ email, password }: { email: string; password: string }) => {
     setLoading(true);
     try {
-      const data = await apiFetch<AuthResponse>('/auth/login', {
-        method: 'POST',
+      const data = await apiFetch<AuthResponse>("/auth/login", {
+        method: "POST",
         body: { email, password },
       });
       persistSession(data);
@@ -69,8 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }) => {
     setLoading(true);
     try {
-      const data = await apiFetch<AuthResponse>('/auth/register', {
-        method: 'POST',
+      const data = await apiFetch<AuthResponse>("/auth/register", {
+        method: "POST",
         body: { name, email, password },
       });
       persistSession(data);
@@ -80,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem(STORAGE_KEY);
+    clearTokenCookie();
     setToken(null);
     setUser(null);
   };
@@ -96,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return ctx;
 }

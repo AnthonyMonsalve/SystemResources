@@ -1,5 +1,5 @@
-import { useAuth } from '../context/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export function ProfilePage() {
   const { user, logout, token } = useAuth();
@@ -11,23 +11,31 @@ export function ProfilePage() {
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-sm font-medium text-primary-700 mb-1">Perfil</p>
-        <h1 className="text-2xl font-semibold text-slate-900">Hola, {user.name || user.email}</h1>
-        <p className="text-sm text-slate-600">Rol: {user.role}</p>
+        <p className="text-sm font-medium text-primary mb-1">
+          Perfil de usuario
+        </p>
+        <h1 className="text-2xl font-semibold text-slate-900">
+          Hola, {user.name || user.email}
+        </h1>
       </div>
 
       <div className="grid grid-cols-1 gap-3">
         <div className="p-4 rounded-xl border border-slate-200 glass-surface">
           <p className="text-sm text-slate-600">
-            Email: <span className="font-medium text-slate-900">{user.email}</span>
+            Email:{" "}
+            <span className="font-medium text-slate-900">{user.email}</span>
           </p>
           {user.name && (
             <p className="text-sm text-slate-600 mt-1">
-              Nombre: <span className="font-medium text-slate-900">{user.name}</span>
+              Nombre:{" "}
+              <span className="font-medium text-slate-900">{user.name}</span>
             </p>
           )}
-          <p className="text-xs text-slate-500 mt-2">
-            Este perfil proviene del endpoint protegido `/auth/profile`.
+          <p className="text-sm text-slate-600 mt-1">
+            Rol:{" "}
+            <span className="font-medium text-slate-900">
+              {user.role.toUpperCase()}
+            </span>
           </p>
         </div>
       </div>
