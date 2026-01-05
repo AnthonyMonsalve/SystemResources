@@ -1,35 +1,70 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Navigate, NavLink, Route, Routes } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
+import { LoginPage } from "./pages/Login";
+import { ProfilePage } from "./pages/Profile";
+import { RegisterPage } from "./pages/Register";
 
-function App() {
-  const [count, setCount] = useState(0)
+const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
+  `px-3 py-2 text-sm font-medium rounded-lg transition ${
+    isActive
+      ? "text-white bg-primary shadow-sm"
+      : "text-primary hover:text-primary/80"
+  } text-center`;
+
+export default function App() {
+  const { user, logout } = useAuth();
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className="min-h-screen flex flex-col">
+      <header className="px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg accent-gradient" />
+          <div>
+            <p className="text-sm text-slate-500">La TV Calle</p>
+            <p className="text-lg font-semibold text-slate-900">
+              Portal de Recursos
+            </p>
+          </div>
+        </div>
+        <nav className="flex items-center gap-2">
+          {user ? (
+            <>
+              <NavLink to="/profile" className={navLinkClasses}>
+                Perfil
+              </NavLink>
+              <button
+                type="button"
+                onClick={logout}
+                className="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-900"
+              >
+                Cerrar sesión
+              </button>
+            </>
+          ) : (
+            <>
+              <NavLink to="/login" className={navLinkClasses}>
+                Login
+              </NavLink>
+              <NavLink to="/registro" className={navLinkClasses}>
+                Registro
+              </NavLink>
+            </>
+          )}
+        </nav>
+      </header>
 
-export default App
+      <main className="flex-1 flex items-center justify-center px-4 py-2 mt-2 mb-6">
+        <div className="w-full max-w-5xl grid grid-cols-1 gap-6">
+          <div className="glass-surface rounded-2xl px-8 py-4 border border-slate-200/70 max-w-lg mx-auto w-full">
+            <Routes>
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/registro" element={<RegisterPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+            </Routes>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
