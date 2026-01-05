@@ -3,11 +3,14 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, readTokenCookie } from "../lib/api";
+import { EyeIcon, EyeOffIcon } from "../shared/EyeIcons";
 
 export function RegisterPage() {
   const { register, loading } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     if (readTokenCookie()) {
@@ -21,7 +24,12 @@ export function RegisterPage() {
     const name = (formData.get("name") as string) || undefined;
     const email = (formData.get("email") as string) ?? "";
     const password = (formData.get("password") as string) ?? "";
+    const confirm = (formData.get("confirmPassword") as string) ?? "";
     setError(null);
+    if (password !== confirm) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
     void register({ name, email, password })
       .then(() => navigate("/profile"))
       .catch((err: unknown) => {
@@ -85,14 +93,51 @@ export function RegisterPage() {
           >
             Contraseña
           </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            required
-            className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
-            placeholder="********"
-          />
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              required
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 pr-28 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
+              placeholder="********"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute inset-y-0 right-2 px-3 text-sm text-primary font-semibold inline-flex items-center"
+              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            >
+              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label
+            htmlFor="confirmPassword"
+            className="block text-sm font-medium text-slate-700"
+          >
+            Confirmar contraseña
+          </label>
+          <div className="relative">
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type={showConfirm ? "text" : "password"}
+              required
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 pr-28 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
+              placeholder="********"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirm((prev) => !prev)}
+              className="absolute inset-y-0 right-2 px-3 text-sm text-primary font-semibold inline-flex items-center"
+              aria-label={showConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
+            >
+              {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
+          </div>
         </div>
 
         <button

@@ -3,11 +3,13 @@ import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, readTokenCookie } from "../lib/api";
+import { EyeIcon, EyeOffIcon } from "../shared/EyeIcons";
 
 export function LoginPage() {
   const { login, loading } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (readTokenCookie()) {
@@ -68,14 +70,24 @@ export function LoginPage() {
           >
             Contraseña
           </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            required
-            className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
-            placeholder="********"
-          />
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              required
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 pr-24 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
+              placeholder="********"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute inset-y-0 right-2 px-3 text-sm text-primary font-semibold inline-flex items-center"
+              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            >
+              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
+          </div>
         </div>
 
         <button
