@@ -22,17 +22,17 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(
+  login(
     @Body() _dto: LoginDto,
     @CurrentUser() user: UserProfile,
-  ): Promise<AuthResponseDto> {
+  ): AuthResponseDto {
     return this.authService.login(user);
   }
 
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  async profile(@CurrentUser() user: UserProfile): Promise<UserProfileDto> {
+  profile(@CurrentUser() user: UserProfile): UserProfileDto {
     return user;
   }
 }

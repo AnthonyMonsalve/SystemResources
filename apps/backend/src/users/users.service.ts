@@ -13,7 +13,7 @@ export class UsersService {
   private users: User[] = [];
 
   async create(dto: CreateUserDto): Promise<UserProfile> {
-    const existing = await this.findByEmail(dto.email);
+    const existing = this.findByEmail(dto.email);
     if (existing) {
       throw new ConflictException('Email already registered');
     }
@@ -31,11 +31,11 @@ export class UsersService {
     return this.sanitize(user);
   }
 
-  async findByEmail(email: string): Promise<User | undefined> {
+  findByEmail(email: string): User | undefined {
     return this.users.find((user) => user.email === email.toLowerCase());
   }
 
-  async findById(id: string): Promise<User | undefined> {
+  findById(id: string): User | undefined {
     return this.users.find((user) => user.id === id);
   }
 
@@ -43,7 +43,7 @@ export class UsersService {
     email: string,
     password: string,
   ): Promise<UserProfile> {
-    const user = await this.findByEmail(email);
+    const user = this.findByEmail(email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }

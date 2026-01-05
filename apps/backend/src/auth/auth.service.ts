@@ -29,7 +29,7 @@ export class AuthService {
     );
   }
 
-  async login(user: UserProfile) {
+  login(user: UserProfile) {
     if (!user) {
       throw new UnauthorizedException();
     }
@@ -37,8 +37,8 @@ export class AuthService {
     return { access_token: token, user };
   }
 
-  async profile(userId: string) {
-    const user = await this.usersService.findById(userId);
+  profile(userId: string) {
+    const user = this.usersService.findById(userId);
     if (!user) {
       throw new UnauthorizedException();
     }
