@@ -106,7 +106,9 @@ export function RegisterPage() {
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
               className="absolute inset-y-0 right-2 px-3 text-sm text-primary font-semibold inline-flex items-center"
-              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              aria-label={
+                showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+              }
             >
               {showPassword ? <EyeOffIcon /> : <EyeIcon />}
             </button>
@@ -133,7 +135,9 @@ export function RegisterPage() {
               type="button"
               onClick={() => setShowConfirm((prev) => !prev)}
               className="absolute inset-y-0 right-2 px-3 text-sm text-primary font-semibold inline-flex items-center"
-              aria-label={showConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
+              aria-label={
+                showConfirm ? "Ocultar contraseña" : "Mostrar contraseña"
+              }
             >
               {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
             </button>
@@ -155,7 +159,10 @@ export function RegisterPage() {
 
       <p className="text-sm text-slate-600 mt-4 text-center">
         ¿Ya tienes cuenta?{" "}
-        <Link to="/login" className="text-primary font-semibold hover:underline">
+        <Link
+          to="/login"
+          className="text-primary font-semibold hover:underline"
+        >
           Inicia sesión
         </Link>
       </p>

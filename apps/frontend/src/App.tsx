@@ -1,12 +1,14 @@
-import { Navigate, NavLink, Route, Routes } from 'react-router-dom';
-import { LoginPage } from './pages/Login';
-import { RegisterPage } from './pages/Register';
-import { ProfilePage } from './pages/Profile';
-import { useAuth } from './context/AuthContext';
+import { Navigate, NavLink, Route, Routes } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
+import { LoginPage } from "./pages/Login";
+import { ProfilePage } from "./pages/Profile";
+import { RegisterPage } from "./pages/Register";
 
 const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
   `px-3 py-2 text-sm font-medium rounded-lg transition ${
-    isActive ? 'text-white bg-primary shadow-sm' : 'text-primary hover:text-primary/80'
+    isActive
+      ? "text-white bg-primary shadow-sm"
+      : "text-primary hover:text-primary/80"
   } text-center`;
 
 export default function App() {
@@ -19,7 +21,9 @@ export default function App() {
           <div className="h-10 w-10 rounded-lg accent-gradient" />
           <div>
             <p className="text-sm text-slate-500">La TV Calle</p>
-            <p className="text-lg font-semibold text-slate-900">Portal de Recursos</p>
+            <p className="text-lg font-semibold text-slate-900">
+              Portal de Recursos
+            </p>
           </div>
         </div>
         <nav className="flex items-center gap-2">
@@ -49,9 +53,9 @@ export default function App() {
         </nav>
       </header>
 
-      <main className="flex-1 flex items-center justify-center px-4 py-2">
+      <main className="flex-1 flex items-center justify-center px-4 py-2 mt-2 mb-6">
         <div className="w-full max-w-5xl grid grid-cols-1 gap-6">
-          <div className="glass-surface rounded-2xl p-8 border border-slate-200/70 max-w-lg mx-auto w-full">
+          <div className="glass-surface rounded-2xl px-8 py-4 border border-slate-200/70 max-w-lg mx-auto w-full">
             <Routes>
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/login" element={<LoginPage />} />

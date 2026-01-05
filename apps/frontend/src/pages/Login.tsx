@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, readTokenCookie } from "../lib/api";
@@ -83,7 +83,9 @@ export function LoginPage() {
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
               className="absolute inset-y-0 right-2 px-3 text-sm text-primary font-semibold inline-flex items-center"
-              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              aria-label={
+                showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+              }
             >
               {showPassword ? <EyeOffIcon /> : <EyeIcon />}
             </button>
