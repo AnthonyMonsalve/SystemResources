@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
-import { UserProfile } from '../users/entities/user.entity';
+import { UserProfile, UserRole } from '../users/entities/user.entity';
 import { LoginDto } from './dto/login.dto';
 
 @Injectable()
@@ -13,7 +13,8 @@ export class AuthService {
   ) {}
 
   async register(dto: CreateUserDto) {
-    const user = await this.usersService.create(dto);
+    // El registro público siempre crea usuarios con rol client.
+    const user = await this.usersService.create({ ...dto, role: UserRole.CLIENT });
     const token = this.signToken(user);
     return { access_token: token, user };
   }
