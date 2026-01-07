@@ -26,7 +26,7 @@ export class CreateUserDto {
   @ApiProperty({
     enum: UserRole,
     required: false,
-    description: 'Rol del usuario. Si no se envía, se usa client por defecto.',
+    description: 'Role for the user; defaults to user when omitted.',
   })
   @IsOptional()
   @IsEnum(UserRole)

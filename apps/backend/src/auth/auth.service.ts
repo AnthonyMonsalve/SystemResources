@@ -13,10 +13,9 @@ export class AuthService {
   ) {}
 
   async register(dto: CreateUserDto) {
-    // El registro público siempre crea usuarios con rol client.
     const user = await this.usersService.create({
       ...dto,
-      role: UserRole.CLIENT,
+      role: UserRole.USER,
     });
     const token = this.signToken(user);
     return { access_token: token, user };
@@ -37,12 +36,12 @@ export class AuthService {
     return { access_token: token, user };
   }
 
-  profile(userId: string) {
-    const user = this.usersService.findById(userId);
+  async profile(userId: string) {
+    const user = await this.usersService.findById(userId);
     if (!user) {
       throw new UnauthorizedException();
     }
-    return this.usersService.sanitize(user);
+    return user;
   }
 
   private signToken(user: UserProfile): string {

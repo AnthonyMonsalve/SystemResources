@@ -13,4 +13,10 @@ export class UserProfileDto {
 
   @ApiProperty({ enum: UserRole })
   role: UserRole;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
 }

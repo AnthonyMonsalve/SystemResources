@@ -3,47 +3,62 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { randomUUID } from 'crypto';
+import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User, UserProfile, UserRole } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
-  private users: User[] = [];
+  constructor(
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
+  ) {}
 
   async create(dto: CreateUserDto): Promise<UserProfile> {
-    const existing = this.findByEmail(dto.email);
+    const existing = await this.findByEmail(dto.email);
     if (existing) {
       throw new ConflictException('Email already registered');
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
-    const role = dto.role ?? UserRole.CLIENT;
-    const user: User = {
-      id: randomUUID(),
+    const role = dto.role ?? UserRole.USER;
+    const user = this.usersRepository.create({
       email: dto.email.toLowerCase(),
       name: dto.name,
       passwordHash,
       role,
-    };
-    this.users.push(user);
-    return this.sanitize(user);
+    });
+    const saved = await this.usersRepository.save(user);
+    return this.sanitize(saved);
   }
 
-  findByEmail(email: string): User | undefined {
-    return this.users.find((user) => user.email === email.toLowerCase());
+  async findByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { email: email.toLowerCase() },
+      select: [
+        'id',
+        'email',
+        'name',
+        'role',
+        'passwordHash',
+        'createdAt',
+        'updatedAt',
+      ],
+    });
   }
 
-  findById(id: string): User | undefined {
-    return this.users.find((user) => user.id === id);
+  async findById(id: string): Promise<UserProfile | null> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    return user ? this.sanitize(user) : null;
   }
 
   async validateCredentials(
     email: string,
     password: string,
   ): Promise<UserProfile> {
-    const user = this.findByEmail(email);
+    const user = await this.findByEmail(email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -55,7 +70,9 @@ export class UsersService {
   }
 
   sanitize(user: User): UserProfile {
-    const { passwordHash, ...rest } = user;
-    return rest;
+    // Password hash is excluded by design; ensure rest of properties stay typed.
+    const { passwordHash, groupMemberships, postsCreated, targetedPosts, ...rest } =
+      user;
+    return rest as UserProfile;
   }
 }
