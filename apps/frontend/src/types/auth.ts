@@ -1,10 +1,11 @@
-export type UserRole = 'client' | 'admin' | 'employee';
+export type UserRole = 'admin' | 'user';
 
 export type UserProfile = {
   id: string;
   email: string;
   name?: string;
   role: UserRole;
+  blockedUntil?: string | null;
 };
 
 export type AuthResponse = {

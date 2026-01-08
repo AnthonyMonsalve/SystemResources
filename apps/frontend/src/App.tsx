@@ -1,5 +1,6 @@
-import { Navigate, NavLink, Route, Routes } from "react-router-dom";
+import { Navigate, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
+import { AdminUsersPage } from "./pages/AdminUsers";
 import { LoginPage } from "./pages/Login";
 import { ProfilePage } from "./pages/Profile";
 import { RegisterPage } from "./pages/Register";
@@ -13,6 +14,11 @@ const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
 
 export default function App() {
   const { user, logout } = useAuth();
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
+  const contentClassName = isAdminRoute
+    ? "glass-surface rounded-2xl px-8 py-6 border border-slate-200/70 w-full"
+    : "glass-surface rounded-2xl px-8 py-4 border border-slate-200/70 max-w-lg mx-auto w-full";
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -32,6 +38,11 @@ export default function App() {
               <NavLink to="/profile" className={navLinkClasses}>
                 Perfil
               </NavLink>
+              {user?.role === "admin" ? (
+                <NavLink to="/admin/usuarios" className={navLinkClasses}>
+                  Usuarios
+                </NavLink>
+              ) : null}
               <button
                 type="button"
                 onClick={logout}
@@ -55,12 +66,13 @@ export default function App() {
 
       <main className="flex-1 flex items-center justify-center px-4 py-2 mt-2 mb-6">
         <div className="w-full max-w-5xl grid grid-cols-1 gap-6">
-          <div className="glass-surface rounded-2xl px-8 py-4 border border-slate-200/70 max-w-lg mx-auto w-full">
+          <div className={contentClassName}>
             <Routes>
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/registro" element={<RegisterPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/admin/usuarios" element={<AdminUsersPage />} />
             </Routes>
           </div>
         </div>
