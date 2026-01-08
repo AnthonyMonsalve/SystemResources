@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { UserRole } from '../entities/user.entity';
+import { UserRole } from '../../users/entities/user.entity';
 
-export class UserProfileDto {
+export class AdminUserDto {
   @ApiProperty()
   id: string;
 
@@ -16,6 +16,9 @@ export class UserProfileDto {
 
   @ApiProperty({ required: false })
   blockedUntil?: Date | null;
+
+  @ApiProperty()
+  isBlocked: boolean;
 
   @ApiProperty()
   createdAt: Date;

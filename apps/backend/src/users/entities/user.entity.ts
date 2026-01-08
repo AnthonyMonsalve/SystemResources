@@ -31,6 +31,9 @@ export class User {
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role: UserRole;
 
+  @Column({ type: 'timestamptz', nullable: true })
+  blockedUntil?: Date | null;
+
   @OneToMany(() => GroupMember, (membership) => membership.user)
   groupMemberships?: GroupMember[];
 
@@ -49,5 +52,5 @@ export class User {
 
 export type UserProfile = Pick<
   User,
-  'id' | 'email' | 'name' | 'role' | 'createdAt' | 'updatedAt'
+  'id' | 'email' | 'name' | 'role' | 'blockedUntil' | 'createdAt' | 'updatedAt'
 >;

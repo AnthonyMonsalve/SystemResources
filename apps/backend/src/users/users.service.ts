@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -42,6 +43,7 @@ export class UsersService {
         'email',
         'name',
         'role',
+        'blockedUntil',
         'passwordHash',
         'createdAt',
         'updatedAt',
@@ -62,11 +64,21 @@ export class UsersService {
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
+    if (this.isBlocked(user)) {
+      throw new ForbiddenException('User is temporarily blocked');
+    }
     const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
     return this.sanitize(user);
+  }
+
+  isBlocked(user: UserProfile): boolean {
+    if (!user.blockedUntil) {
+      return false;
+    }
+    return user.blockedUntil.getTime() > Date.now();
   }
 
   sanitize(user: User): UserProfile {

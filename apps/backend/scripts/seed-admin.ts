@@ -1,11 +1,11 @@
-import 'reflect-metadata';
 import * as bcrypt from 'bcrypt';
+import 'reflect-metadata';
 import { DataSource } from 'typeorm';
-import { User, UserRole } from '../src/users/entities/user.entity';
-import { Group } from '../src/groups/entities/group.entity';
 import { GroupMember } from '../src/groups/entities/group-member.entity';
-import { Post } from '../src/posts/entities/post.entity';
+import { Group } from '../src/groups/entities/group.entity';
 import { MediaFile } from '../src/media/entities/media-file.entity';
+import { Post } from '../src/posts/entities/post.entity';
+import { User, UserRole } from '../src/users/entities/user.entity';
 
 const DEFAULT_DB_URL =
   'postgres://system_resources:system_resources@localhost:5432/system_resources';
@@ -20,13 +20,9 @@ function getArgValue(flag: string): string | undefined {
 
 async function run() {
   const email =
-    getArgValue('--email') ||
-    process.env.ADMIN_EMAIL ||
-    'admin@example.com';
+    getArgValue('--email') || process.env.ADMIN_EMAIL || 'admin2@example.com';
   const password =
-    getArgValue('--password') ||
-    process.env.ADMIN_PASSWORD ||
-    'ChangeMe123';
+    getArgValue('--password') || process.env.ADMIN_PASSWORD || 'ChangeMe123';
   const name = getArgValue('--name') || process.env.ADMIN_NAME || 'Admin';
   const databaseUrl = process.env.DATABASE_URL || DEFAULT_DB_URL;
 
