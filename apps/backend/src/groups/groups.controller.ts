@@ -74,6 +74,13 @@ export class GroupsController {
     return this.groupsService.findAllForMember(user.id);
   }
 
+  @Get('user/:userId')
+  @Roles(UserRole.ADMIN)
+  @ApiOkResponse({ type: GroupMemberCountDto, isArray: true })
+  findForUser(@Param('userId', ParseUUIDPipe) userId: string) {
+    return this.groupsService.findAllForMember(userId);
+  }
+
   @Get(':id')
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
