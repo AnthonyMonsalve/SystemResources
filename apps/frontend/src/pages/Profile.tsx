@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { UserGroupsPanel } from "../shared/UserGroupsPanel";
 
 export function ProfilePage() {
   const { user, logout, token } = useAuth();
@@ -38,6 +39,7 @@ export function ProfilePage() {
             </span>
           </p>
         </div>
+        <UserGroupsPanel />
       </div>
 
       <button
