@@ -141,4 +141,13 @@ export class GroupsService {
 
     return qb.getMany();
   }
+
+  async findAllForMember(userId: string): Promise<Group[]> {
+    return this.groupsRepository
+      .createQueryBuilder('group')
+      .select(['group.id', 'group.name', 'group.description', 'group.createdAt', 'group.updatedAt'])
+      .innerJoin('group.members', 'member', 'member.userId = :userId', { userId })
+      .loadRelationCountAndMap('group.membersCount', 'group.members')
+      .getMany();
+  }
 }

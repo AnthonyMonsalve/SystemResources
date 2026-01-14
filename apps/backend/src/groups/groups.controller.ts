@@ -9,7 +9,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -18,6 +18,7 @@ import type { UserProfile } from '../users/entities/user.entity';
 import { UserRole } from '../users/entities/user.entity';
 import { AddGroupMemberDto } from './dto/add-group-member.dto';
 import { CreateGroupDto } from './dto/create-group.dto';
+import { GroupMemberCountDto } from './dto/group-member-count.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { GroupsService } from './groups.service';
 
@@ -65,6 +66,12 @@ export class GroupsController {
     @Param('userId', ParseUUIDPipe) userId: string,
   ) {
     return this.groupsService.removeMember(id, userId);
+  }
+
+  @Get('me')
+  @ApiOkResponse({ type: GroupMemberCountDto, isArray: true })
+  findMine(@CurrentUser() user: UserProfile) {
+    return this.groupsService.findAllForMember(user.id);
   }
 
   @Get(':id')
