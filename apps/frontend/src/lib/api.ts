@@ -55,7 +55,11 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     throw new ApiError(message, res.status, details);
   }
 
-  return (await res.json()) as T;
+  const text = await res.text();
+  if (!text) {
+    return undefined as T;
+  }
+  return JSON.parse(text) as T;
 }
 
 async function safeErrorMessage(res: Response): Promise<{ message: string; details?: unknown }> {

@@ -1,5 +1,6 @@
 import { Navigate, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
+import { AdminGroupsPage } from "./pages/AdminGroups";
 import { AdminUsersPage } from "./pages/AdminUsers";
 import { LoginPage } from "./pages/Login";
 import { ProfilePage } from "./pages/Profile";
@@ -39,9 +40,14 @@ export default function App() {
                 Perfil
               </NavLink>
               {user?.role === "admin" ? (
-                <NavLink to="/admin/usuarios" className={navLinkClasses}>
-                  Usuarios
-                </NavLink>
+                <>
+                  <NavLink to="/admin/usuarios" className={navLinkClasses}>
+                    Usuarios
+                  </NavLink>
+                  <NavLink to="/admin/grupos" className={navLinkClasses}>
+                    Grupos
+                  </NavLink>
+                </>
               ) : null}
               <button
                 type="button"
@@ -73,6 +79,7 @@ export default function App() {
               <Route path="/registro" element={<RegisterPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/admin/usuarios" element={<AdminUsersPage />} />
+              <Route path="/admin/grupos" element={<AdminGroupsPage />} />
             </Routes>
           </div>
         </div>
