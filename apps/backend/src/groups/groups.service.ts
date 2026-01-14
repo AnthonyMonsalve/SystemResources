@@ -1,11 +1,12 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { User, UserProfile, UserRole } from '../users/entities/user.entity';
 import { AddGroupMemberDto } from './dto/add-group-member.dto';
 import { CreateGroupDto } from './dto/create-group.dto';
@@ -59,30 +60,44 @@ export class GroupsService {
     }
   }
 
-  async addMember(groupId: string, dto: AddGroupMemberDto): Promise<GroupMember> {
+  async addMember(
+    groupId: string,
+    dto: AddGroupMemberDto,
+  ): Promise<GroupMember[]> {
     const group = await this.groupsRepository.findOne({ where: { id: groupId } });
     if (!group) {
       throw new NotFoundException('Group not found');
     }
-    const user = await this.usersRepository.findOne({
-      where: { id: dto.userId },
+    const requestedIds = Array.from(
+      new Set(
+        dto.userIds?.length ? dto.userIds : dto.userId ? [dto.userId] : [],
+      ),
+    );
+    if (requestedIds.length === 0) {
+      throw new BadRequestException('userIds is required');
+    }
+    const users = await this.usersRepository.find({
+      where: { id: In(requestedIds) },
     });
-    if (!user) {
+    if (users.length !== requestedIds.length) {
       throw new NotFoundException('User not found');
     }
-    const existing = await this.groupMembersRepository.findOne({
-      where: { groupId, userId: dto.userId },
+    const existing = await this.groupMembersRepository.find({
+      where: { groupId, userId: In(requestedIds) },
     });
-    if (existing) {
+    if (existing.length > 0) {
       throw new ConflictException('User already in group');
     }
-    const membership = this.groupMembersRepository.create({
-      groupId,
-      userId: dto.userId,
-      group,
-      user,
+    const memberships = requestedIds.map((userId) => {
+      const user = users.find((item) => item.id === userId);
+      return this.groupMembersRepository.create({
+        groupId,
+        userId,
+        group,
+        user,
+      });
     });
-    return this.groupMembersRepository.save(membership);
+    return this.groupMembersRepository.save(memberships);
   }
 
   async removeMember(groupId: string, userId: string): Promise<void> {
