@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ApiError, apiFetch } from "../lib/api";
 import { ConfirmModal } from "./ConfirmModal";
 import { Modal } from "./Modal";
+import { RefreshButton } from "./RefreshButton";
 import type { UserGroup } from "../types/groups";
 import type { AdminUser } from "../types/admin";
 
@@ -110,14 +111,11 @@ export function UserGroupsModal({
                   {user.name || user.email}
                 </span>
               </p>
-              <button
-                type="button"
+              <RefreshButton
                 onClick={() => void fetchUserGroups(user.id)}
-                className="inline-flex justify-center rounded-xl border border-slate-200 text-slate-700 font-medium px-3 py-1.5 transition shadow-sm disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-xl border border-slate-200 text-slate-700 font-medium px-3 py-1.5 transition shadow-sm disabled:opacity-60"
                 disabled={loading}
-              >
-                {loading ? "Actualizando..." : "Actualizar"}
-              </button>
+              />
             </div>
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
             {loading ? (

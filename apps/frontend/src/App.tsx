@@ -1,3 +1,4 @@
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Navigate, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { AdminGroupsPage } from "./pages/AdminGroups";
@@ -7,7 +8,7 @@ import { ProfilePage } from "./pages/Profile";
 import { RegisterPage } from "./pages/Register";
 
 const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
-  `px-3 py-2 text-sm font-medium rounded-lg transition ${
+  `inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition ${
     isActive
       ? "text-white bg-primary shadow-sm"
       : "text-primary hover:text-primary/80"
@@ -37,14 +38,17 @@ export default function App() {
           {user ? (
             <>
               <NavLink to="/profile" className={navLinkClasses}>
+                <FontAwesomeIcon icon="user" />
                 Perfil
               </NavLink>
               {user?.role === "admin" ? (
                 <>
                   <NavLink to="/admin/usuarios" className={navLinkClasses}>
+                    <FontAwesomeIcon icon="users" />
                     Usuarios
                   </NavLink>
                   <NavLink to="/admin/grupos" className={navLinkClasses}>
+                    <FontAwesomeIcon icon="layer-group" />
                     Grupos
                   </NavLink>
                 </>
@@ -52,8 +56,9 @@ export default function App() {
               <button
                 type="button"
                 onClick={logout}
-                className="px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-900"
+                className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-900"
               >
+                <FontAwesomeIcon icon="right-from-bracket" />
                 Cerrar sesión
               </button>
             </>

@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, apiFetch } from "../lib/api";
 import { ConfirmModal } from "../shared/ConfirmModal";
 import { Modal } from "../shared/Modal";
+import { RefreshButton } from "../shared/RefreshButton";
 import { UserGroupsModal } from "../shared/UserGroupsModal";
 import type { AdminUser } from "../types/admin";
 
@@ -267,14 +269,13 @@ export function AdminUsersPage() {
             Usuarios registrados
           </h1>
         </div>
-        <button
-          type="button"
+        <RefreshButton
           onClick={() => void fetchUsers()}
-          className="inline-flex justify-center rounded-xl bg-primary text-white font-medium px-4 py-2.5 transition shadow-sm disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-xl bg-primary text-white font-medium px-4 py-2.5 transition shadow-sm disabled:opacity-60"
           disabled={loading}
-        >
-          {loading ? "Actualizando..." : "Actualizar listado"}
-        </button>
+          ariaLabel="Actualizar listado"
+          title="Actualizar listado"
+        />
       </div>
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -343,16 +344,18 @@ export function AdminUsersPage() {
                   type="button"
                   onClick={() => openPasswordModal(item)}
                   disabled={action?.busy}
-                  className="inline-flex justify-center rounded-xl bg-slate-900 text-white font-medium px-4 py-2 transition shadow-sm disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 text-white font-medium px-4 py-2 text-sm transition shadow-sm disabled:opacity-60"
                 >
+                  <FontAwesomeIcon icon="key" />
                   Restablecer contraseña
                 </button>
                 <button
                   type="button"
                   onClick={() => openGroupModal(item)}
                   disabled={action?.busy}
-                  className="inline-flex justify-center rounded-xl border border-slate-200 text-slate-700 font-medium px-4 py-2 transition shadow-sm disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 text-slate-700 font-medium px-4 py-2 text-sm transition shadow-sm disabled:opacity-60"
                 >
+                  <FontAwesomeIcon icon="layer-group" />
                   Ver grupos
                 </button>
                 {!isSelf ? (
@@ -362,8 +365,9 @@ export function AdminUsersPage() {
                         type="button"
                         onClick={() => void unblockUser(item.id)}
                         disabled={action?.busy}
-                        className="inline-flex justify-center rounded-xl bg-emerald-500 text-white font-medium px-4 py-2 transition shadow-sm disabled:opacity-60"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 text-white font-medium px-4 py-2 text-sm transition shadow-sm disabled:opacity-60"
                       >
+                        <FontAwesomeIcon icon="ban" />
                         Desbloquear
                       </button>
                     ) : (
@@ -371,8 +375,9 @@ export function AdminUsersPage() {
                         type="button"
                         onClick={() => openBlockModal(item)}
                         disabled={action?.busy}
-                        className="inline-flex justify-center rounded-xl bg-amber-500 text-white font-medium px-4 py-2 transition shadow-sm disabled:opacity-60"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 text-white font-medium px-4 py-2 text-sm transition shadow-sm disabled:opacity-60"
                       >
+                        <FontAwesomeIcon icon="ban" />
                         Bloquear
                       </button>
                     )}
@@ -380,8 +385,9 @@ export function AdminUsersPage() {
                       type="button"
                       onClick={() => openDeleteModal(item)}
                       disabled={action?.busy}
-                      className="inline-flex justify-center rounded-xl border border-red-200 text-red-600 font-medium px-4 py-2 transition shadow-sm disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 text-red-600 font-medium px-4 py-2 text-sm transition shadow-sm disabled:opacity-60"
                     >
+                      <FontAwesomeIcon icon="trash" />
                       Eliminar
                     </button>
                   </>

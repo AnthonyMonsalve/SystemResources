@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ApiError, apiFetch } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { RefreshButton } from "./RefreshButton";
 import type { UserGroup } from "../types/groups";
 
 export function UserGroupsPanel() {
@@ -36,14 +37,11 @@ export function UserGroupsPanel() {
             Tus grupos asignados
           </h2>
         </div>
-        <button
-          type="button"
+        <RefreshButton
           onClick={() => token && fetchGroups(token)}
-          className="inline-flex justify-center rounded-xl border border-slate-200 text-slate-700 font-medium px-3 py-2 transition shadow-sm disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-xl border border-slate-200 text-slate-700 font-medium px-3 py-2 transition shadow-sm disabled:opacity-60"
           disabled={loading}
-        >
-          {loading ? "Actualizando..." : "Actualizar"}
-        </button>
+        />
       </div>
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}

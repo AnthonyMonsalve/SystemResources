@@ -1,3 +1,4 @@
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { UserGroupsPanel } from "../shared/UserGroupsPanel";
@@ -45,8 +46,9 @@ export function ProfilePage() {
       <button
         type="button"
         onClick={logout}
-        className="inline-flex justify-center rounded-xl bg-primary text-white font-medium px-4 py-2.5 transition shadow-sm"
+        className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-white font-medium px-4 py-2.5 transition shadow-sm w-full"
       >
+        <FontAwesomeIcon icon="right-from-bracket" />
         Cerrar sesión
       </button>
     </div>

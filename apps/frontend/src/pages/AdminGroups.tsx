@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, apiFetch } from "../lib/api";
 import { ConfirmModal } from "../shared/ConfirmModal";
 import { Modal } from "../shared/Modal";
+import { RefreshButton } from "../shared/RefreshButton";
 import type { AdminGroup, AdminGroupMember, AdminUser } from "../types/admin";
 
 type ActionState = {
@@ -262,14 +264,13 @@ export function AdminGroupsPage() {
           </h1>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
+          <RefreshButton
             onClick={() => void fetchData()}
-            className="inline-flex justify-center rounded-xl bg-primary text-white font-medium px-4 py-2.5 transition shadow-sm disabled:opacity-60"
+            className="inline-flex items-center justify-center rounded-xl bg-primary text-white font-medium px-4 py-2.5 transition shadow-sm disabled:opacity-60"
             disabled={loading}
-          >
-            {loading ? "Actualizando..." : "Actualizar listado"}
-          </button>
+            ariaLabel="Actualizar listado"
+            title="Actualizar listado"
+          />
           <button
             type="button"
             onClick={openCreateModal}
@@ -353,24 +354,27 @@ export function AdminGroupsPage() {
                   type="button"
                   onClick={() => openEditModal(group)}
                   disabled={action?.busy}
-                  className="inline-flex justify-center rounded-xl border border-slate-200 text-slate-700 font-medium px-4 py-2 transition shadow-sm disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 text-slate-700 font-medium px-4 py-2 text-sm transition shadow-sm disabled:opacity-60"
                 >
+                  <FontAwesomeIcon icon="pen" />
                   Editar
                 </button>
                 <button
                   type="button"
                   onClick={() => openMemberModal(group)}
                   disabled={action?.busy || availableUsers.length === 0}
-                  className="inline-flex justify-center rounded-xl bg-emerald-500 text-white font-medium px-4 py-2 transition shadow-sm disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 text-white font-medium px-4 py-2 text-sm transition shadow-sm disabled:opacity-60"
                 >
+                  <FontAwesomeIcon icon="user-plus" />
                   Agregar usuario
                 </button>
                 <button
                   type="button"
                   onClick={() => setConfirmState({ type: "delete-group", group })}
                   disabled={action?.busy}
-                  className="inline-flex justify-center rounded-xl border border-red-200 text-red-600 font-medium px-4 py-2 transition shadow-sm disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 text-red-600 font-medium px-4 py-2 text-sm transition shadow-sm disabled:opacity-60"
                 >
+                  <FontAwesomeIcon icon="trash" />
                   Eliminar
                 </button>
               </div>
