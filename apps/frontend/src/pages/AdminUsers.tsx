@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { ApiError, apiFetch } from "../lib/api";
 import { ConfirmModal } from "../shared/ConfirmModal";
 import { Modal } from "../shared/Modal";
+import { UserGroupsModal } from "../shared/UserGroupsModal";
 import type { AdminUser } from "../types/admin";
 
 type ActionState = {
@@ -14,6 +15,7 @@ type ActionState = {
 type ModalState =
   | { type: "password"; user: AdminUser }
   | { type: "block"; user: AdminUser };
+
 
 export function AdminUsersPage() {
   const { token, user } = useAuth();
@@ -28,6 +30,7 @@ export function AdminUsersPage() {
   const [modalError, setModalError] = useState<string | null>(null);
   const [confirmUser, setConfirmUser] = useState<AdminUser | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [groupModalUser, setGroupModalUser] = useState<AdminUser | null>(null);
 
   const isAdmin = user?.role === "admin";
 
@@ -237,6 +240,14 @@ export function AdminUsersPage() {
     setConfirmUser(null);
   };
 
+  const openGroupModal = (selected: AdminUser) => {
+    setGroupModalUser(selected);
+  };
+
+  const closeGroupModal = () => {
+    setGroupModalUser(null);
+  };
+
   if (!token) {
     return <Navigate to="/login" replace />;
   }
@@ -299,7 +310,6 @@ export function AdminUsersPage() {
           const blockedLabel = item.isBlocked
             ? `Bloqueado hasta ${formatDate(item.blockedUntil)}`
             : "Activo";
-
           return (
             <div
               key={item.id}
@@ -336,6 +346,14 @@ export function AdminUsersPage() {
                   className="inline-flex justify-center rounded-xl bg-slate-900 text-white font-medium px-4 py-2 transition shadow-sm disabled:opacity-60"
                 >
                   Restablecer contraseña
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openGroupModal(item)}
+                  disabled={action?.busy}
+                  className="inline-flex justify-center rounded-xl border border-slate-200 text-slate-700 font-medium px-4 py-2 transition shadow-sm disabled:opacity-60"
+                >
+                  Ver grupos
                 </button>
                 {!isSelf ? (
                   <>
@@ -510,6 +528,13 @@ export function AdminUsersPage() {
           }
         }}
         onClose={closeDeleteModal}
+      />
+
+      <UserGroupsModal
+        isOpen={groupModalUser !== null}
+        user={groupModalUser}
+        token={token}
+        onClose={closeGroupModal}
       />
     </div>
   );
