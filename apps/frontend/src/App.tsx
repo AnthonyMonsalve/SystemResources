@@ -2,8 +2,12 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Navigate, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { AdminGroupsPage } from "./pages/AdminGroups";
+import { AdminPostCreatePage } from "./pages/AdminPostCreate";
+import { AdminPostsPage } from "./pages/AdminPosts";
 import { AdminUsersPage } from "./pages/AdminUsers";
+import { HomePage } from "./pages/Home";
 import { LoginPage } from "./pages/Login";
+import { PostDetailPage } from "./pages/PostDetail";
 import { ProfilePage } from "./pages/Profile";
 import { RegisterPage } from "./pages/Register";
 
@@ -18,9 +22,15 @@ export default function App() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
+  const isWideRoute =
+    location.pathname.startsWith("/home") ||
+    location.pathname.startsWith("/posts") ||
+    location.pathname.startsWith("/profile");
   const contentClassName = isAdminRoute
     ? "glass-surface rounded-2xl px-8 py-6 border border-slate-200/70 w-full"
-    : "glass-surface rounded-2xl px-8 py-4 border border-slate-200/70 max-w-lg mx-auto w-full";
+    : isWideRoute
+      ? "w-full max-w-6xl mx-auto"
+      : "glass-surface rounded-2xl px-8 py-4 border border-slate-200/70 max-w-lg mx-auto w-full";
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -37,12 +47,16 @@ export default function App() {
         <nav className="flex items-center gap-2">
           {user ? (
             <>
-              <NavLink to="/profile" className={navLinkClasses}>
-                <FontAwesomeIcon icon="user" />
-                Perfil
-              </NavLink>
               {user?.role === "admin" ? (
                 <>
+                  <NavLink to="/home" className={navLinkClasses}>
+                    <FontAwesomeIcon icon="house" />
+                    Inicio
+                  </NavLink>
+                  <NavLink to="/profile" className={navLinkClasses}>
+                    <FontAwesomeIcon icon="user" />
+                    Perfil
+                  </NavLink>
                   <NavLink to="/admin/usuarios" className={navLinkClasses}>
                     <FontAwesomeIcon icon="users" />
                     Usuarios
@@ -51,8 +65,23 @@ export default function App() {
                     <FontAwesomeIcon icon="layer-group" />
                     Grupos
                   </NavLink>
+                  <NavLink to="/admin/posts" className={navLinkClasses}>
+                    <FontAwesomeIcon icon="file-lines" />
+                    Posts
+                  </NavLink>
                 </>
-              ) : null}
+              ) : (
+                <>
+                  <NavLink to="/home" className={navLinkClasses}>
+                    <FontAwesomeIcon icon="house" />
+                    Inicio
+                  </NavLink>
+                  <NavLink to="/profile" className={navLinkClasses}>
+                    <FontAwesomeIcon icon="user" />
+                    Perfil
+                  </NavLink>
+                </>
+              )}
               <button
                 type="button"
                 onClick={logout}
@@ -82,9 +111,13 @@ export default function App() {
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/registro" element={<RegisterPage />} />
+              <Route path="/home" element={<HomePage />} />
+              <Route path="/posts/:id" element={<PostDetailPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/admin/usuarios" element={<AdminUsersPage />} />
               <Route path="/admin/grupos" element={<AdminGroupsPage />} />
+              <Route path="/admin/posts" element={<AdminPostsPage />} />
+              <Route path="/admin/posts/nuevo" element={<AdminPostCreatePage />} />
             </Routes>
           </div>
         </div>

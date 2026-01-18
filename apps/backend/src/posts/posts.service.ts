@@ -15,6 +15,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { QueryPostsDto } from './dto/query-posts.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post, PostVisibility } from './entities/post.entity';
+import { sanitizePostHtml } from './utils/sanitize-html';
 
 @Injectable()
 export class PostsService {
@@ -41,7 +42,7 @@ export class PostsService {
 
     const post = this.postsRepository.create({
       title: dto.title,
-      description: dto.description,
+      description: sanitizePostHtml(dto.description),
       type: dto.type,
       category: dto.category,
       tags: dto.tags ?? [],
@@ -72,7 +73,7 @@ export class PostsService {
       post.title = dto.title;
     }
     if (dto.description !== undefined) {
-      post.description = dto.description;
+      post.description = sanitizePostHtml(dto.description);
     }
     if (dto.type !== undefined) {
       post.type = dto.type;
@@ -162,7 +163,7 @@ export class PostsService {
                     groupVis: PostVisibility.GROUP,
                   })
                   .andWhere(
-                    'EXISTS (SELECT 1 FROM group_members gm WHERE gm.groupId = post.groupId AND gm.userId = :userId)',
+                    'EXISTS (SELECT 1 FROM group_members gm WHERE gm."groupId" = "post"."groupId" AND gm."userId" = :userId)',
                   ),
               ),
             );

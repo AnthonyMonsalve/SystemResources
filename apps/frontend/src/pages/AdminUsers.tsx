@@ -20,7 +20,7 @@ type ModalState =
 
 
 export function AdminUsersPage() {
-  const { token, user } = useAuth();
+  const { token, user, initializing } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -250,12 +250,16 @@ export function AdminUsersPage() {
     setGroupModalUser(null);
   };
 
-  if (!token) {
+  if (!token && !initializing) {
     return <Navigate to="/login" replace />;
   }
 
+  if (initializing || !user) {
+    return <p className="text-sm text-slate-500">Cargando sesion...</p>;
+  }
+
   if (!isAdmin) {
-    return <Navigate to="/profile" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   return (

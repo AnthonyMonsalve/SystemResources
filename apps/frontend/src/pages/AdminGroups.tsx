@@ -23,7 +23,7 @@ type ConfirmState =
   | { type: "remove-member"; group: AdminGroup; member: AdminGroupMember };
 
 export function AdminGroupsPage() {
-  const { token, user } = useAuth();
+  const { token, user, initializing } = useAuth();
   const [groups, setGroups] = useState<AdminGroup[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(false);
@@ -246,12 +246,16 @@ export function AdminGroupsPage() {
     setBusy(key, false, null);
   };
 
-  if (!token) {
+  if (!token && !initializing) {
     return <Navigate to="/login" replace />;
   }
 
+  if (initializing || !user) {
+    return <p className="text-sm text-slate-500">Cargando sesion...</p>;
+  }
+
   if (!isAdmin) {
-    return <Navigate to="/profile" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   return (

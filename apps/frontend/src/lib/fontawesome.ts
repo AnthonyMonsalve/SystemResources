@@ -1,6 +1,8 @@
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
   faBan,
+  faFileLines,
+  faHouse,
   faPen,
   faKey,
   faLayerGroup,
@@ -16,6 +18,8 @@ library.add(
   faUser,
   faUsers,
   faLayerGroup,
+  faFileLines,
+  faHouse,
   faRightFromBracket,
   faRotateRight,
   faKey,

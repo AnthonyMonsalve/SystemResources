@@ -18,6 +18,11 @@ type RequestOptions = {
   token?: string | null;
 };
 
+type UploadOptions = {
+  method?: "POST" | "PUT" | "PATCH";
+  token?: string | null;
+};
+
 export function setTokenCookie(token: string) {
   document.cookie = `${TOKEN_COOKIE}=${encodeURIComponent(token)}; path=/; sameSite=Lax`;
 }
@@ -48,6 +53,35 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     method: options.method ?? "GET",
     headers,
     body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+
+  if (!res.ok) {
+    const { message, details } = await safeErrorMessage(res);
+    throw new ApiError(message, res.status, details);
+  }
+
+  const text = await res.text();
+  if (!text) {
+    return undefined as T;
+  }
+  return JSON.parse(text) as T;
+}
+
+export async function apiUpload<T>(
+  path: string,
+  body: FormData,
+  options: UploadOptions = {},
+): Promise<T> {
+  const headers: Record<string, string> = {};
+  const token = options.token ?? readTokenCookie();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method: options.method ?? "POST",
+    headers,
+    body,
   });
 
   if (!res.ok) {
