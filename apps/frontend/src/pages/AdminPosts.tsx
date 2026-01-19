@@ -7,13 +7,7 @@ import { htmlToText, truncateText } from "../lib/richText";
 import { ConfirmModal } from "../shared/ConfirmModal";
 import { Modal } from "../shared/Modal";
 import { RefreshButton } from "../shared/RefreshButton";
-import { WysiwygEditor } from "../shared/WysiwygEditor";
-import type {
-  AdminGroup,
-  AdminPost,
-  AdminPostVisibility,
-  AdminUser,
-} from "../types/admin";
+import type { AdminPost } from "../types/admin";
 
 type ActionState = {
   busy?: boolean;
@@ -29,34 +23,12 @@ type PostListResponse = {
   limit: number;
 };
 
-type PostFormState = {
-  title: string;
-  description: string;
-  type: string;
-  category: string;
-  tags: string;
-  visibility: AdminPostVisibility;
-  ownerUserId: string;
-  groupId: string;
-};
-
 type MediaFormState = {
   title: string;
   description: string;
   category: string;
   tags: string;
   file: File | null;
-};
-
-const emptyForm: PostFormState = {
-  title: "",
-  description: "",
-  type: "",
-  category: "",
-  tags: "",
-  visibility: "PUBLIC",
-  ownerUserId: "",
-  groupId: "",
 };
 
 const emptyMediaForm: MediaFormState = {
@@ -70,17 +42,12 @@ const emptyMediaForm: MediaFormState = {
 export function AdminPostsPage() {
   const { token, user, initializing } = useAuth();
   const [posts, setPosts] = useState<AdminPost[]>([]);
-  const [groups, setGroups] = useState<AdminGroup[]>([]);
-  const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionState, setActionState] = useState<Record<string, ActionState>>(
     {}
   );
-  const [modalPost, setModalPost] = useState<AdminPost | null>(null);
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
-  const [formState, setFormState] = useState<PostFormState>(emptyForm);
-  const [modalError, setModalError] = useState<string | null>(null);
   const [mediaPost, setMediaPost] = useState<AdminPost | null>(null);
   const [mediaForm, setMediaForm] = useState<MediaFormState>(emptyMediaForm);
   const [mediaError, setMediaError] = useState<string | null>(null);
@@ -122,15 +89,11 @@ export function AdminPostsPage() {
     setLoading(true);
     setError(null);
     try {
-      const [postsData, groupsData, usersData] = await Promise.all([
-        apiFetch<PostListResponse>("/posts?limit=100", { token }),
-        apiFetch<AdminGroup[]>("/groups", { token }),
-        apiFetch<AdminUser[]>("/admin/users", { token }),
-      ]);
+      const postsData = await apiFetch<PostListResponse>("/posts?limit=100", {
+        token,
+      });
       setPosts(postsData.items);
       setTotalCount(postsData.total);
-      setGroups(groupsData);
-      setUsers(usersData);
     } catch (err) {
       setError(resolveErrorMessage(err, "No se pudieron cargar los posts."));
     } finally {
@@ -148,27 +111,6 @@ export function AdminPostsPage() {
     }));
   };
 
-  const openEditModal = (post: AdminPost) => {
-    setModalPost(post);
-    setFormState({
-      title: post.title ?? "",
-      description: post.description ?? "",
-      type: post.type ?? "",
-      category: post.category ?? "",
-      tags: post.tags?.join(", ") ?? "",
-      visibility: post.visibility ?? "PUBLIC",
-      ownerUserId: post.ownerUserId ?? "",
-      groupId: post.groupId ?? "",
-    });
-    setModalError(null);
-  };
-
-  const closeModal = () => {
-    setModalPost(null);
-    setFormState(emptyForm);
-    setModalError(null);
-  };
-
   const openMediaModal = (post: AdminPost) => {
     setMediaPost(post);
     setMediaForm(emptyMediaForm);
@@ -179,77 +121,6 @@ export function AdminPostsPage() {
     setMediaPost(null);
     setMediaForm(emptyMediaForm);
     setMediaError(null);
-  };
-
-  const handleVisibilityChange = (value: AdminPostVisibility) => {
-    setFormState((prev) => ({
-      ...prev,
-      visibility: value,
-      ownerUserId: value === "USER" ? prev.ownerUserId : "",
-      groupId: value === "GROUP" ? prev.groupId : "",
-    }));
-  };
-
-  const buildPayload = () => {
-    const tags = formState.tags
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter(Boolean);
-
-    const payload: Record<string, unknown> = {
-      title: formState.title.trim(),
-      description: formState.description.trim() || undefined,
-      type: formState.type.trim() || undefined,
-      category: formState.category.trim() || undefined,
-      tags,
-      visibility: formState.visibility,
-    };
-
-    if (formState.visibility === "USER") {
-      payload.ownerUserId = formState.ownerUserId || undefined;
-    }
-    if (formState.visibility === "GROUP") {
-      payload.groupId = formState.groupId || undefined;
-    }
-    return payload;
-  };
-
-  const validateForm = () => {
-    if (formState.title.trim().length < 3) {
-      return "El titulo debe tener al menos 3 caracteres.";
-    }
-    if (formState.visibility === "USER" && !formState.ownerUserId) {
-      return "Selecciona un usuario para la visibilidad USER.";
-    }
-    if (formState.visibility === "GROUP" && !formState.groupId) {
-      return "Selecciona un grupo para la visibilidad GROUP.";
-    }
-    return null;
-  };
-
-  const updatePost = async (post: AdminPost) => {
-    const validation = validateForm();
-    if (validation) {
-      setModalError(validation);
-      return;
-    }
-    setModalError(null);
-    setBusy(post.id, true);
-    try {
-      const updated = await apiFetch<AdminPost>(`/posts/${post.id}`, {
-        method: "PATCH",
-        body: buildPayload(),
-        token,
-      });
-      setPosts((prev) => prev.map((item) => (item.id === post.id ? updated : item)));
-      closeModal();
-    } catch (err) {
-      const message = resolveErrorMessage(err, "No se pudo actualizar el post.");
-      setModalError(message);
-      setBusy(post.id, false, message);
-      return;
-    }
-    setBusy(post.id, false, null);
   };
 
   const deletePost = async (post: AdminPost) => {
@@ -443,15 +314,13 @@ export function AdminPostsPage() {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => openEditModal(post)}
-                  disabled={action?.busy}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 text-slate-700 font-medium px-4 py-2 text-sm transition shadow-sm disabled:opacity-60"
+                <Link
+                  to={`/admin/posts/${post.id}/editar`}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 text-slate-700 font-medium px-4 py-2 text-sm transition shadow-sm"
                 >
                   <FontAwesomeIcon icon="pen" />
                   Editar
-                </button>
+                </Link>
                 <button
                   type="button"
                   onClick={() => openMediaModal(post)}
@@ -478,174 +347,6 @@ export function AdminPostsPage() {
           );
         })}
       </div>
-
-      <Modal
-        isOpen={modalPost !== null}
-        title="Editar post"
-        onClose={closeModal}
-        footer={
-          modalPost ? (
-            <>
-              <button
-                type="button"
-                onClick={closeModal}
-                className="inline-flex justify-center rounded-xl border border-slate-200 text-slate-700 font-medium px-4 py-2 transition shadow-sm"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={() => modalPost && void updatePost(modalPost)}
-                disabled={modalPost ? actionState[modalPost.id]?.busy : false}
-                className="inline-flex justify-center rounded-xl bg-slate-900 text-white font-medium px-4 py-2 transition shadow-sm disabled:opacity-60"
-              >
-                Guardar cambios
-              </button>
-            </>
-          ) : null
-        }
-      >
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-semibold text-slate-600">
-              Titulo
-            </label>
-            <input
-              type="text"
-              value={formState.title}
-              onChange={(event) =>
-                setFormState((prev) => ({ ...prev, title: event.target.value }))
-              }
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
-              placeholder="Ej. Nueva campana"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600">
-              Descripcion
-            </label>
-            <WysiwygEditor
-              value={formState.description}
-              onChange={(value) =>
-                setFormState((prev) => ({ ...prev, description: value }))
-              }
-              placeholder="Resumen del post"
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-600">
-                Tipo
-              </label>
-              <input
-                type="text"
-                value={formState.type}
-                onChange={(event) =>
-                  setFormState((prev) => ({ ...prev, type: event.target.value }))
-                }
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
-                placeholder="Ej. anuncio"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-600">
-                Categoria
-              </label>
-              <input
-                type="text"
-                value={formState.category}
-                onChange={(event) =>
-                  setFormState((prev) => ({
-                    ...prev,
-                    category: event.target.value,
-                  }))
-                }
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
-                placeholder="Ej. producto"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600">
-              Tags (separados por coma)
-            </label>
-            <input
-              type="text"
-              value={formState.tags}
-              onChange={(event) =>
-                setFormState((prev) => ({ ...prev, tags: event.target.value }))
-              }
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
-              placeholder="tag1, tag2"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600">
-              Visibilidad
-            </label>
-            <select
-              value={formState.visibility}
-              onChange={(event) =>
-                handleVisibilityChange(event.target.value as AdminPostVisibility)
-              }
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
-            >
-              <option value="PUBLIC">Publico</option>
-              <option value="USER">Usuario</option>
-              <option value="GROUP">Grupo</option>
-            </select>
-          </div>
-          {formState.visibility === "USER" ? (
-            <div>
-              <label className="block text-xs font-semibold text-slate-600">
-                Usuario destino
-              </label>
-              <select
-                value={formState.ownerUserId}
-                onChange={(event) =>
-                  setFormState((prev) => ({
-                    ...prev,
-                    ownerUserId: event.target.value,
-                  }))
-                }
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
-              >
-                <option value="">Selecciona un usuario</option>
-                {users.map((candidate) => (
-                  <option key={candidate.id} value={candidate.id}>
-                    {candidate.name ? `${candidate.name} (${candidate.email})` : candidate.email}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ) : null}
-          {formState.visibility === "GROUP" ? (
-            <div>
-              <label className="block text-xs font-semibold text-slate-600">
-                Grupo destino
-              </label>
-              <select
-                value={formState.groupId}
-                onChange={(event) =>
-                  setFormState((prev) => ({
-                    ...prev,
-                    groupId: event.target.value,
-                  }))
-                }
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
-              >
-                <option value="">Selecciona un grupo</option>
-                {groups.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ) : null}
-        </div>
-        {modalError ? <p className="text-sm text-red-600">{modalError}</p> : null}
-      </Modal>
 
       <ConfirmModal
         isOpen={confirmState !== null}

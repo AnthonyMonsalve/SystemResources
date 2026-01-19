@@ -1,6 +1,7 @@
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
   faBan,
+  faBars,
   faFileLines,
   faHouse,
   faPen,
@@ -12,9 +13,11 @@ import {
   faTrash,
   faUser,
   faUsers,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
 library.add(
+  faBars,
   faUser,
   faUsers,
   faLayerGroup,
@@ -26,5 +29,6 @@ library.add(
   faBan,
   faTrash,
   faPen,
-  faUserPlus
+  faUserPlus,
+  faXmark
 );
