@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, apiFetch } from "../lib/api";
+import { resolveMediaUrl } from "../lib/media";
 import { htmlToText, truncateText } from "../lib/richText";
 import type { Post, PostVisibility } from "../types/posts";
 
@@ -177,21 +178,21 @@ function PostSection({
   posts: Post[];
   onSelect: (post: Post) => void;
 }) {
+  if (posts.length === 0) {
+    return null;
+  }
+
   return (
     <section className="space-y-3">
       <div>
         <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
         <p className="text-sm text-slate-600">{subtitle}</p>
       </div>
-      {posts.length === 0 ? (
-        <p className="text-sm text-slate-500">No hay posts para mostrar.</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {posts.map((post) => (
-            <PostCard key={post.id} post={post} onSelect={onSelect} />
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {posts.map((post) => (
+          <PostCard key={post.id} post={post} onSelect={onSelect} />
+        ))}
+      </div>
     </section>
   );
 }
@@ -204,6 +205,8 @@ function PostCard({ post, onSelect }: { post: Post; onSelect: (post: Post) => vo
   const descriptionPreview = post.description
     ? truncateText(htmlToText(post.description), 140)
     : null;
+  const coverMedia =
+    post.mediaFiles?.find((media) => media.isCover) ?? post.mediaFiles?.[0];
 
   return (
     <article
@@ -218,7 +221,17 @@ function PostCard({ post, onSelect }: { post: Post; onSelect: (post: Post) => vo
       }}
       className="rounded-2xl border border-slate-200 glass-surface p-4 space-y-3 cursor-pointer transition hover:border-primary/40 hover:shadow-sm"
     >
-      <div>
+      <div className="space-y-2">
+        {coverMedia ? (
+          <div className="aspect-[16/9] w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+            <img
+              src={resolveMediaUrl(coverMedia.url)}
+              alt={coverMedia.title || post.title}
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          </div>
+        ) : null}
         <p className="text-xs text-slate-500 uppercase tracking-wide">
           {resolveVisibilityLabel(post.visibility)}
         </p>

@@ -20,6 +20,7 @@ export type PostMedia = {
   url: string;
   mimeType?: string;
   size?: number;
+  isCover?: boolean;
   createdAt: string;
 };
 

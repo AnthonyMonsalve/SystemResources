@@ -1,7 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type { Multer } from 'multer';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
+import { basename } from 'path';
 import type { UserProfile } from '../users/entities/user.entity';
 import { PostsService } from '../posts/posts.service';
 import { MediaFile } from './entities/media-file.entity';
@@ -28,18 +29,34 @@ export class MediaService {
       currentUser,
     );
 
+    const existingCover = await this.mediaRepository.findOne({
+      where: { postId: post.id, isCover: true },
+    });
+    const shouldBeCover = dto.isCover === true || !existingCover;
+
+    const fileName = basename(file.path);
     const media = this.mediaRepository.create({
       title: dto.title,
       description: dto.description,
       category: dto.category,
       tags: dto.tags ?? [],
-      url: file.path.replace(/\\/g, '/'),
+      url: `/uploads/${fileName}`,
       mimeType: file.mimetype,
       size: file.size,
       post,
       postId: post.id,
+      isCover: shouldBeCover,
     });
-    return this.mediaRepository.save(media);
+    const saved = await this.mediaRepository.save(media);
+
+    if (shouldBeCover) {
+      await this.mediaRepository.update(
+        { postId: post.id, id: Not(saved.id) },
+        { isCover: false },
+      );
+    }
+
+    return saved;
   }
 
   async findOne(id: string, currentUser: UserProfile): Promise<MediaFile> {
@@ -58,6 +75,23 @@ export class MediaService {
     const media = await this.mediaRepository.findOne({ where: { id } });
     if (!media) {
       throw new NotFoundException('Media not found');
+    }
+    if (media.isCover) {
+      const replacement = await this.mediaRepository.findOne({
+        where: { postId: media.postId, id: Not(media.id) },
+        order: { createdAt: 'DESC' },
+      });
+      if (!replacement) {
+        throw new BadRequestException(
+          'Cover media is required for posts',
+        );
+      }
+      await this.mediaRepository.remove(media);
+      if (!replacement.isCover) {
+        replacement.isCover = true;
+        await this.mediaRepository.save(replacement);
+      }
+      return;
     }
     await this.mediaRepository.remove(media);
   }

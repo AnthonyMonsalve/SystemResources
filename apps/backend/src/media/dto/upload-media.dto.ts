@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsOptional, IsString, IsUUID } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsArray, IsBoolean, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class UploadMediaDto {
   @ApiProperty({ example: 'Screenshot' })
@@ -21,6 +22,14 @@ export class UploadMediaDto {
   @IsArray()
   @IsString({ each: true })
   tags?: string[];
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === true || value === 'true' || value === 1 || value === '1',
+  )
+  @IsBoolean()
+  isCover?: boolean;
 
   @ApiProperty({ format: 'uuid' })
   @IsUUID()

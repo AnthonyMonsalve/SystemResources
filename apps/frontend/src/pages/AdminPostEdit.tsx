@@ -9,6 +9,7 @@ import type {
   AdminPostVisibility,
   AdminUser,
 } from "../types/admin";
+import { resolveMediaUrl } from "../lib/media";
 import type { PostMedia } from "../types/posts";
 
 type PostFormState = {
@@ -47,6 +48,18 @@ type MediaFormState = {
   error?: string | null;
 };
 
+const createCoverForm = (): MediaFormState => ({
+  id: `cover-${Date.now()}`,
+  title: "",
+  description: "",
+  category: "",
+  tags: "",
+  file: null,
+  replaceId: null,
+  status: "idle",
+  error: null,
+});
+
 const createMediaForm = (index: number): MediaFormState => ({
   id: `media-${index}-${Date.now()}`,
   title: "",
@@ -71,6 +84,7 @@ export function AdminPostEditPage() {
   const [error, setError] = useState<string | null>(null);
   const [formState, setFormState] = useState<PostFormState>(emptyForm);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [coverForm, setCoverForm] = useState<MediaFormState>(createCoverForm);
   const [mediaForms, setMediaForms] = useState<MediaFormState[]>([
     createMediaForm(0),
   ]);
@@ -78,6 +92,8 @@ export function AdminPostEditPage() {
   const [mediaCounter, setMediaCounter] = useState(1);
 
   const isAdmin = user?.role === "admin";
+  const coverMedia = existingMedia.find((media) => media.isCover);
+  const nonCoverMedia = existingMedia.filter((media) => !media.isCover);
 
   useEffect(() => {
     if (!token || !isAdmin || !id) return;
@@ -158,6 +174,9 @@ export function AdminPostEditPage() {
     if (formState.visibility === "GROUP" && !formState.groupId) {
       return "Selecciona un grupo para la visibilidad GROUP.";
     }
+    if (!coverMedia && !coverForm.file) {
+      return "Debes agregar una portada para el post.";
+    }
     return null;
   };
 
@@ -181,6 +200,10 @@ export function AdminPostEditPage() {
           : item
       )
     );
+  };
+
+  const updateCoverForm = (patch: Partial<MediaFormState>) => {
+    setCoverForm((prev) => ({ ...prev, ...patch, status: "idle", error: null }));
   };
 
   const startReplace = (media: PostMedia) => {
@@ -209,8 +232,57 @@ export function AdminPostEditPage() {
     }
   };
 
+  const uploadCover = async (targetPost: AdminPost) => {
+    if (!coverForm.file) return false;
+    if (coverForm.title.trim().length < 3) {
+      setCoverForm((prev) => ({
+        ...prev,
+        status: "error",
+        error: "El titulo debe tener al menos 3 caracteres.",
+      }));
+      return true;
+    }
+
+    setCoverForm((prev) => ({ ...prev, status: "uploading", error: null }));
+    try {
+      const data = new FormData();
+      data.append("file", coverForm.file);
+      data.append("title", coverForm.title.trim());
+      data.append("postId", targetPost.id);
+      data.append("isCover", "true");
+      if (coverForm.description.trim()) {
+        data.append("description", coverForm.description.trim());
+      }
+      if (coverForm.category.trim()) {
+        data.append("category", coverForm.category.trim());
+      }
+      const tags = coverForm.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+      tags.forEach((tag) => data.append("tags", tag));
+
+      const uploaded = await apiUpload<PostMedia>("/media/upload", data, { token });
+      setCoverForm((prev) => ({ ...prev, status: "success", error: null }));
+      setExistingMedia((prev) => [
+        ...prev.map((item) => ({ ...item, isCover: false })),
+        uploaded,
+      ]);
+      return false;
+    } catch (err) {
+      const message = resolveErrorMessage(err, "No se pudo subir la portada.");
+      setCoverForm((prev) => ({ ...prev, status: "error", error: message }));
+      return true;
+    }
+  };
+
   const uploadMedia = async (targetPost: AdminPost) => {
     let hasError = false;
+
+    const coverError = await uploadCover(targetPost);
+    if (coverError) {
+      hasError = true;
+    }
 
     for (const item of mediaForms) {
       const hasContent =
@@ -547,6 +619,121 @@ export function AdminPostEditPage() {
       {submitError ? <p className="text-sm text-red-600">{submitError}</p> : null}
 
       <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-slate-500">
+            Portada del post
+          </p>
+          <p className="text-sm text-slate-600">
+            La portada es obligatoria. Puedes reemplazarla subiendo una nueva.
+          </p>
+        </div>
+        {coverMedia ? (
+          <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-slate-700">
+                {coverMedia.title || "Portada actual"}
+              </p>
+              <span className="text-xs font-semibold uppercase tracking-wide text-emerald-600">
+                Actual
+              </span>
+            </div>
+            <MediaPreview media={coverMedia} />
+          </div>
+        ) : (
+          <p className="text-sm text-slate-600">
+            No hay portada. Debes agregar una antes de guardar.
+          </p>
+        )}
+        <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-600">
+                Archivo de portada
+              </label>
+              <input
+                type="file"
+                onChange={(event) =>
+                  updateCoverForm({
+                    file: event.target.files?.[0] ?? null,
+                  })
+                }
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 bg-white"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600">
+                Titulo de portada
+              </label>
+              <input
+                type="text"
+                value={coverForm.title}
+                onChange={(event) =>
+                  updateCoverForm({ title: event.target.value })
+                }
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
+                placeholder="Ej. Portada principal"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-600">
+              Descripcion
+            </label>
+            <textarea
+              value={coverForm.description}
+              onChange={(event) =>
+                updateCoverForm({
+                  description: event.target.value,
+                })
+              }
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
+              rows={3}
+              placeholder="Descripcion corta"
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-600">
+                Categoria
+              </label>
+              <input
+                type="text"
+                value={coverForm.category}
+                onChange={(event) =>
+                  updateCoverForm({ category: event.target.value })
+                }
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
+                placeholder="Ej. imagen"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600">
+                Tags (separados por coma)
+              </label>
+              <input
+                type="text"
+                value={coverForm.tags}
+                onChange={(event) =>
+                  updateCoverForm({ tags: event.target.value })
+                }
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
+                placeholder="portada, hero"
+              />
+            </div>
+          </div>
+          {coverForm.status === "uploading" ? (
+            <p className="text-xs text-slate-500">Subiendo portada...</p>
+          ) : null}
+          {coverForm.status === "success" ? (
+            <p className="text-xs text-emerald-600">Portada subida.</p>
+          ) : null}
+          {coverForm.status === "error" ? (
+            <p className="text-xs text-red-600">{coverForm.error}</p>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-500">
@@ -566,13 +753,13 @@ export function AdminPostEditPage() {
             )}
           </div>
         </div>
-        {existingMedia.length ? (
+        {nonCoverMedia.length ? (
           <div className="space-y-3">
             <p className="text-xs uppercase tracking-wide text-slate-500">
               Archivos actuales
             </p>
             <div className="grid gap-3">
-              {existingMedia.map((media) => (
+              {nonCoverMedia.map((media) => (
                 <div
                   key={media.id}
                   className="rounded-xl border border-slate-200 bg-white p-3 space-y-2"
@@ -668,7 +855,7 @@ export function AdminPostEditPage() {
                       updateMediaForm(item.id, { title: event.target.value })
                     }
                     className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
-                    placeholder="Ej. Portada"
+                    placeholder="Ej. Archivo adicional"
                   />
                 </div>
               </div>
@@ -793,25 +980,4 @@ function MediaPreview({ media }: { media: PostMedia }) {
       Abrir archivo
     </a>
   );
-}
-
-function resolveMediaUrl(raw: string): string {
-  const base = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
-  if (!raw) return "";
-  if (raw.startsWith("http://") || raw.startsWith("https://")) {
-    return raw;
-  }
-  const normalized = raw.replace(/\\/g, "/");
-  const uploadsIndex = normalized.lastIndexOf("/uploads/");
-  if (uploadsIndex >= 0) {
-    return `${base}${normalized.slice(uploadsIndex)}`;
-  }
-  if (normalized.startsWith("/uploads/")) {
-    return `${base}${normalized}`;
-  }
-  if (normalized.startsWith("uploads/")) {
-    return `${base}/${normalized}`;
-  }
-  const fileName = normalized.split("/").pop() ?? normalized;
-  return `${base}/uploads/${fileName}`;
 }

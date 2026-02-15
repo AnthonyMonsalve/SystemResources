@@ -45,6 +45,17 @@ type MediaFormState = {
   error?: string | null;
 };
 
+const createCoverForm = (): MediaFormState => ({
+  id: `cover-${Date.now()}`,
+  title: "",
+  description: "",
+  category: "",
+  tags: "",
+  file: null,
+  status: "idle",
+  error: null,
+});
+
 const createMediaForm = (index: number): MediaFormState => ({
   id: `media-${index}-${Date.now()}`,
   title: "",
@@ -66,6 +77,7 @@ export function AdminPostCreatePage() {
   const [formState, setFormState] = useState<PostFormState>(emptyForm);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [createdPost, setCreatedPost] = useState<AdminPost | null>(null);
+  const [coverForm, setCoverForm] = useState<MediaFormState>(createCoverForm);
   const [mediaForms, setMediaForms] = useState<MediaFormState[]>([
     createMediaForm(0),
   ]);
@@ -139,6 +151,12 @@ export function AdminPostCreatePage() {
     if (formState.visibility === "GROUP" && !formState.groupId) {
       return "Selecciona un grupo para la visibilidad GROUP.";
     }
+    if (!coverForm.file) {
+      return "Selecciona una imagen de portada.";
+    }
+    if (coverForm.title.trim().length < 3) {
+      return "El titulo de la portada debe tener al menos 3 caracteres.";
+    }
     return null;
   };
 
@@ -164,8 +182,65 @@ export function AdminPostCreatePage() {
     );
   };
 
+  const updateCoverForm = (patch: Partial<MediaFormState>) => {
+    setCoverForm((prev) => ({ ...prev, ...patch, status: "idle", error: null }));
+  };
+
+  const uploadCover = async (post: AdminPost) => {
+    if (!coverForm.file) {
+      setCoverForm((prev) => ({
+        ...prev,
+        status: "error",
+        error: "Selecciona un archivo de portada.",
+      }));
+      return true;
+    }
+    if (coverForm.title.trim().length < 3) {
+      setCoverForm((prev) => ({
+        ...prev,
+        status: "error",
+        error: "El titulo debe tener al menos 3 caracteres.",
+      }));
+      return true;
+    }
+
+    setCoverForm((prev) => ({ ...prev, status: "uploading", error: null }));
+    try {
+      const data = new FormData();
+      data.append("file", coverForm.file);
+      data.append("title", coverForm.title.trim());
+      data.append("postId", post.id);
+      data.append("isCover", "true");
+      if (coverForm.description.trim()) {
+        data.append("description", coverForm.description.trim());
+      }
+      if (coverForm.category.trim()) {
+        data.append("category", coverForm.category.trim());
+      }
+      const tags = coverForm.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+      tags.forEach((tag) => data.append("tags", tag));
+
+      await apiUpload("/media/upload", data, { token });
+
+      setCoverForm((prev) => ({ ...prev, status: "success", error: null }));
+      return false;
+    } catch (err) {
+      const message = resolveErrorMessage(err, "No se pudo subir la portada.");
+      setCoverForm((prev) => ({ ...prev, status: "error", error: message }));
+      return true;
+    }
+  };
+
   const uploadMedia = async (post: AdminPost) => {
     let hasError = false;
+
+    const coverError = await uploadCover(post);
+    if (coverError) {
+      hasError = true;
+    }
 
     for (const item of mediaForms) {
       const hasContent =
@@ -309,6 +384,7 @@ export function AdminPostCreatePage() {
     setFormState(emptyForm);
     setCreatedPost(null);
     setSubmitError(null);
+    setCoverForm(createCoverForm());
     setMediaForms([createMediaForm(0)]);
     setMediaError(null);
     setMediaCounter(1);
@@ -505,6 +581,104 @@ export function AdminPostCreatePage() {
       {submitError ? <p className="text-sm text-red-600">{submitError}</p> : null}
 
       <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-slate-500">
+            Portada del post
+          </p>
+          <p className="text-sm text-slate-600">
+            Esta imagen es obligatoria y se mostrara como portada.
+          </p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-600">
+                Archivo de portada
+              </label>
+              <input
+                type="file"
+                onChange={(event) =>
+                  updateCoverForm({
+                    file: event.target.files?.[0] ?? null,
+                  })
+                }
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 bg-white"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600">
+                Titulo de portada
+              </label>
+              <input
+                type="text"
+                value={coverForm.title}
+                onChange={(event) =>
+                  updateCoverForm({ title: event.target.value })
+                }
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
+                placeholder="Ej. Portada principal"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-600">
+              Descripcion
+            </label>
+            <textarea
+              value={coverForm.description}
+              onChange={(event) =>
+                updateCoverForm({
+                  description: event.target.value,
+                })
+              }
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
+              rows={3}
+              placeholder="Descripcion corta"
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-600">
+                Categoria
+              </label>
+              <input
+                type="text"
+                value={coverForm.category}
+                onChange={(event) =>
+                  updateCoverForm({ category: event.target.value })
+                }
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
+                placeholder="Ej. imagen"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600">
+                Tags (separados por coma)
+              </label>
+              <input
+                type="text"
+                value={coverForm.tags}
+                onChange={(event) =>
+                  updateCoverForm({ tags: event.target.value })
+                }
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
+                placeholder="portada, hero"
+              />
+            </div>
+          </div>
+          {coverForm.status === "uploading" ? (
+            <p className="text-xs text-slate-500">Subiendo portada...</p>
+          ) : null}
+          {coverForm.status === "success" ? (
+            <p className="text-xs text-emerald-600">Portada subida.</p>
+          ) : null}
+          {coverForm.status === "error" ? (
+            <p className="text-xs text-red-600">{coverForm.error}</p>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-500">
@@ -579,7 +753,7 @@ export function AdminPostCreatePage() {
                       updateMediaForm(item.id, { title: event.target.value })
                     }
                     className="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 bg-white"
-                    placeholder="Ej. Portada"
+                    placeholder="Ej. Archivo adicional"
                   />
                 </div>
               </div>

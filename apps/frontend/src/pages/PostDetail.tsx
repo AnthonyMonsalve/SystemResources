@@ -3,6 +3,7 @@ import { Navigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, apiFetch } from "../lib/api";
 import { sanitizeHtml } from "../lib/richText";
+import { resolveMediaUrl } from "../lib/media";
 import type { Post, PostMedia, PostVisibility } from "../types/posts";
 
 export function PostDetailPage() {
@@ -199,26 +200,6 @@ function resolveErrorMessage(err: unknown, fallback: string): string {
   return fallback;
 }
 
-function resolveMediaUrl(raw: string): string {
-  const base = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
-  if (!raw) return "";
-  if (raw.startsWith("http://") || raw.startsWith("https://")) {
-    return raw;
-  }
-  const normalized = raw.replace(/\\/g, "/");
-  const uploadsIndex = normalized.lastIndexOf("/uploads/");
-  if (uploadsIndex >= 0) {
-    return `${base}${normalized.slice(uploadsIndex)}`;
-  }
-  if (normalized.startsWith("/uploads/")) {
-    return `${base}${normalized}`;
-  }
-  if (normalized.startsWith("uploads/")) {
-    return `${base}/${normalized}`;
-  }
-  const fileName = normalized.split("/").pop() ?? normalized;
-  return `${base}/uploads/${fileName}`;
-}
 
 function formatBytes(value: number): string {
   if (value < 1024) return `${value} B`;

@@ -34,6 +34,9 @@ export class MediaFile {
   @Column({ type: 'int' })
   size: number;
 
+  @Column({ default: false })
+  isCover: boolean;
+
   @ManyToOne(() => Post, (post) => post.mediaFiles, { onDelete: 'CASCADE' })
   post: Post;
 
