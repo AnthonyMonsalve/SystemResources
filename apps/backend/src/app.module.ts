@@ -5,6 +5,7 @@ import { AdminModule } from './admin/admin.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { CommentsModule } from './comments/comments.module';
 import { GroupsModule } from './groups/groups.module';
 import { MediaModule } from './media/media.module';
 import { PostsModule } from './posts/posts.module';
@@ -31,6 +32,7 @@ import { UsersModule } from './users/users.module';
     GroupsModule,
     PostsModule,
     MediaModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

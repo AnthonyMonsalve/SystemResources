@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Comment } from '../../comments/entities/comment.entity';
 import { GroupMember } from '../../groups/entities/group-member.entity';
 import { Post } from '../../posts/entities/post.entity';
 
@@ -42,6 +43,9 @@ export class User {
 
   @OneToMany(() => Post, (post) => post.ownerUser)
   targetedPosts?: Post[];
+
+  @OneToMany(() => Comment, (comment) => comment.author)
+  comments?: Comment[];
 
   @CreateDateColumn()
   createdAt: Date;
