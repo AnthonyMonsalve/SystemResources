@@ -17,6 +17,9 @@ import { ProgramsPage } from './pages/Programs';
 import { ExerciseDetailPage } from './pages/ExerciseDetail';
 import { RoutineDetailPage } from './pages/RoutineDetail';
 import { ProgramDetailPage } from './pages/ProgramDetail';
+import { ExerciseFormPage } from './pages/ExerciseForm';
+import { RoutineFormPage } from './pages/RoutineForm';
+import { ProgramFormPage } from './pages/ProgramForm';
 
 export default function App() {
   return (
@@ -33,11 +36,17 @@ export default function App() {
 
         {/* Fitness routes */}
         <Route path="/exercises" element={<ExercisesPage />} />
+        <Route path="/exercises/new" element={<ExerciseFormPage />} />
         <Route path="/exercises/:id" element={<ExerciseDetailPage />} />
+        <Route path="/exercises/:id/edit" element={<ExerciseFormPage />} />
         <Route path="/routines" element={<RoutinesPage />} />
+        <Route path="/routines/new" element={<RoutineFormPage />} />
         <Route path="/routines/:id" element={<RoutineDetailPage />} />
+        <Route path="/routines/:id/edit" element={<RoutineFormPage />} />
         <Route path="/programs" element={<ProgramsPage />} />
+        <Route path="/programs/new" element={<ProgramFormPage />} />
         <Route path="/programs/:id" element={<ProgramDetailPage />} />
+        <Route path="/programs/:id/edit" element={<ProgramFormPage />} />
 
         {/* Legacy routes - mantener por ahora */}
         <Route path="/posts/:id" element={<PostDetailPage />} />
