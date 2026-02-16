@@ -11,6 +11,9 @@ import { AdminPostCreatePage } from './pages/AdminPostCreate';
 import { AdminPostEditPage } from './pages/AdminPostEdit';
 import { AdminPostsPage } from './pages/AdminPosts';
 import { AdminUsersPage } from './pages/AdminUsers';
+import { ExercisesPage } from './pages/Exercises';
+import { RoutinesPage } from './pages/Routines';
+import { ProgramsPage } from './pages/Programs';
 
 export default function App() {
   return (
@@ -24,6 +27,11 @@ export default function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/home" element={<HomePage />} />
+
+        {/* Fitness routes */}
+        <Route path="/exercises" element={<ExercisesPage />} />
+        <Route path="/routines" element={<RoutinesPage />} />
+        <Route path="/programs" element={<ProgramsPage />} />
 
         {/* Legacy routes - mantener por ahora */}
         <Route path="/posts/:id" element={<PostDetailPage />} />
