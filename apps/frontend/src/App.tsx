@@ -14,6 +14,9 @@ import { AdminUsersPage } from './pages/AdminUsers';
 import { ExercisesPage } from './pages/Exercises';
 import { RoutinesPage } from './pages/Routines';
 import { ProgramsPage } from './pages/Programs';
+import { ExerciseDetailPage } from './pages/ExerciseDetail';
+import { RoutineDetailPage } from './pages/RoutineDetail';
+import { ProgramDetailPage } from './pages/ProgramDetail';
 
 export default function App() {
   return (
@@ -30,8 +33,11 @@ export default function App() {
 
         {/* Fitness routes */}
         <Route path="/exercises" element={<ExercisesPage />} />
+        <Route path="/exercises/:id" element={<ExerciseDetailPage />} />
         <Route path="/routines" element={<RoutinesPage />} />
+        <Route path="/routines/:id" element={<RoutineDetailPage />} />
         <Route path="/programs" element={<ProgramsPage />} />
+        <Route path="/programs/:id" element={<ProgramDetailPage />} />
 
         {/* Legacy routes - mantener por ahora */}
         <Route path="/posts/:id" element={<PostDetailPage />} />
