@@ -12,6 +12,7 @@ import { MediaModule } from './media/media.module';
 import { PostsModule } from './posts/posts.module';
 import { ProgramsModule } from './programs/programs.module';
 import { RoutinesModule } from './routines/routines.module';
+import { SeedModule } from './seed/seed.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { UsersModule } from './users/users.module';
 
@@ -41,6 +42,7 @@ import { UsersModule } from './users/users.module';
     ExercisesModule,
     RoutinesModule,
     ProgramsModule,
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [AppService],
