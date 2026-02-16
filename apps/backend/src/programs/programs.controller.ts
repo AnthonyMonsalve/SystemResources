@@ -9,9 +9,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { GetUser } from '../auth/decorators/get-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { User } from '../users/entities/user.entity';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { UserProfile } from '../users/entities/user.entity';
 import { AssignClientDto } from './dto/assign-client.dto';
 import { CreateProgramDto } from './dto/create-program.dto';
 import { QueryProgramsDto } from './dto/query-programs.dto';
@@ -24,17 +24,17 @@ export class ProgramsController {
   constructor(private readonly programsService: ProgramsService) {}
 
   @Post()
-  create(@Body() createProgramDto: CreateProgramDto, @GetUser() user: User) {
+  create(@Body() createProgramDto: CreateProgramDto, @CurrentUser() user: UserProfile) {
     return this.programsService.create(createProgramDto, user);
   }
 
   @Get()
-  findAll(@Query() queryDto: QueryProgramsDto, @GetUser() user: User) {
+  findAll(@Query() queryDto: QueryProgramsDto, @CurrentUser() user: UserProfile) {
     return this.programsService.findAll(queryDto, user);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @GetUser() user: User) {
+  findOne(@Param('id') id: string, @CurrentUser() user: UserProfile) {
     return this.programsService.findOne(id, user);
   }
 
@@ -42,13 +42,13 @@ export class ProgramsController {
   update(
     @Param('id') id: string,
     @Body() updateProgramDto: UpdateProgramDto,
-    @GetUser() user: User,
+    @CurrentUser() user: UserProfile,
   ) {
     return this.programsService.update(id, updateProgramDto, user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @GetUser() user: User) {
+  remove(@Param('id') id: string, @CurrentUser() user: UserProfile) {
     return this.programsService.remove(id, user);
   }
 
@@ -56,7 +56,7 @@ export class ProgramsController {
   assignClient(
     @Param('id') id: string,
     @Body() assignClientDto: AssignClientDto,
-    @GetUser() user: User,
+    @CurrentUser() user: UserProfile,
   ) {
     return this.programsService.assignClient(id, assignClientDto, user);
   }
@@ -65,20 +65,20 @@ export class ProgramsController {
   unassignClient(
     @Param('programId') programId: string,
     @Param('clientId') clientId: string,
-    @GetUser() user: User,
+    @CurrentUser() user: UserProfile,
   ) {
     return this.programsService.unassignClient(programId, clientId, user);
   }
 
   @Get(':id/clients')
-  getClientsForProgram(@Param('id') id: string, @GetUser() user: User) {
+  getClientsForProgram(@Param('id') id: string, @CurrentUser() user: UserProfile) {
     return this.programsService.getClientsForProgram(id, user);
   }
 
   @Get('clients/:clientId')
   getProgramsForClient(
     @Param('clientId') clientId: string,
-    @GetUser() user: User,
+    @CurrentUser() user: UserProfile,
   ) {
     return this.programsService.getProgramsForClient(clientId, user);
   }

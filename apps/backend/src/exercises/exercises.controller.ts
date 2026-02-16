@@ -10,8 +10,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { GetUser } from '../auth/decorators/get-user.decorator';
-import { User } from '../users/entities/user.entity';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { UserProfile } from '../users/entities/user.entity';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { QueryExercisesDto } from './dto/query-exercises.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
@@ -25,7 +25,7 @@ export class ExercisesController {
   @Post()
   create(
     @Body() createExerciseDto: CreateExerciseDto,
-    @GetUser() user: User,
+    @CurrentUser() user: UserProfile,
   ) {
     return this.exercisesService.create(createExerciseDto, user);
   }
@@ -44,13 +44,13 @@ export class ExercisesController {
   update(
     @Param('id') id: string,
     @Body() updateExerciseDto: UpdateExerciseDto,
-    @GetUser() user: User,
+    @CurrentUser() user: UserProfile,
   ) {
     return this.exercisesService.update(id, updateExerciseDto, user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @GetUser() user: User) {
+  remove(@Param('id') id: string, @CurrentUser() user: UserProfile) {
     return this.exercisesService.remove(id, user);
   }
 }

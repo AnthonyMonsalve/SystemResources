@@ -6,7 +6,9 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RoutinesService } from '../routines/routines.service';
-import { User, UserRole } from '../users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
+import type { UserProfile } from '../users/entities/user.entity';
+import { UserRole } from '../users/entities/user.entity';
 import { AssignClientDto } from './dto/assign-client.dto';
 import { CreateProgramDto } from './dto/create-program.dto';
 import { QueryProgramsDto } from './dto/query-programs.dto';
@@ -28,7 +30,7 @@ export class ProgramsService {
 
   async create(
     createProgramDto: CreateProgramDto,
-    user: User,
+    user: UserProfile,
   ): Promise<TrainingProgram> {
     // Only ADMIN and TRAINER can create programs
     if (user.role !== UserRole.ADMIN && user.role !== UserRole.TRAINER) {
@@ -61,7 +63,7 @@ export class ProgramsService {
 
   async findAll(
     queryDto: QueryProgramsDto,
-    user: User,
+    user: UserProfile,
   ): Promise<{
     data: TrainingProgram[];
     total: number;
@@ -130,7 +132,7 @@ export class ProgramsService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: string, user: User): Promise<TrainingProgram> {
+  async findOne(id: string, user: UserProfile): Promise<TrainingProgram> {
     const program = await this.programsRepository.findOne({
       where: { id },
       relations: [
@@ -163,7 +165,7 @@ export class ProgramsService {
   async update(
     id: string,
     updateProgramDto: UpdateProgramDto,
-    user: User,
+    user: UserProfile,
   ): Promise<TrainingProgram> {
     const program = await this.findOne(id, user);
 
@@ -180,7 +182,7 @@ export class ProgramsService {
     return this.findOne(id, user);
   }
 
-  async remove(id: string, user: User): Promise<void> {
+  async remove(id: string, user: UserProfile): Promise<void> {
     const program = await this.findOne(id, user);
 
     // Only creator or ADMIN can delete
@@ -194,7 +196,7 @@ export class ProgramsService {
   async assignClient(
     programId: string,
     assignClientDto: AssignClientDto,
-    user: User,
+    user: UserProfile,
   ): Promise<ProgramClient> {
     const program = await this.findOne(programId, user);
 
@@ -239,7 +241,7 @@ export class ProgramsService {
   async unassignClient(
     programId: string,
     clientId: string,
-    user: User,
+    user: UserProfile,
   ): Promise<void> {
     const program = await this.findOne(programId, user);
 
@@ -265,7 +267,7 @@ export class ProgramsService {
 
   async getClientsForProgram(
     programId: string,
-    user: User,
+    user: UserProfile,
   ): Promise<ProgramClient[]> {
     const program = await this.findOne(programId, user);
 
@@ -277,7 +279,7 @@ export class ProgramsService {
 
   async getProgramsForClient(
     clientId: string,
-    user: User,
+    user: UserProfile,
   ): Promise<TrainingProgram[]> {
     // Only the client themselves, their trainer, or ADMIN can view
     if (

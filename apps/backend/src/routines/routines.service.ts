@@ -6,7 +6,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ExercisesService } from '../exercises/exercises.service';
-import { User, UserRole } from '../users/entities/user.entity';
+import type { UserProfile } from '../users/entities/user.entity';
+import { UserRole } from '../users/entities/user.entity';
 import { AddExerciseToRoutineDto } from './dto/add-exercise-to-routine.dto';
 import { CreateRoutineDto } from './dto/create-routine.dto';
 import { QueryRoutinesDto } from './dto/query-routines.dto';
@@ -24,7 +25,7 @@ export class RoutinesService {
     private exercisesService: ExercisesService,
   ) {}
 
-  async create(createRoutineDto: CreateRoutineDto, user: User): Promise<Routine> {
+  async create(createRoutineDto: CreateRoutineDto, user: UserProfile): Promise<Routine> {
     // Only ADMIN and TRAINER can create routines
     if (user.role !== UserRole.ADMIN && user.role !== UserRole.TRAINER) {
       throw new ForbiddenException(
@@ -53,7 +54,7 @@ export class RoutinesService {
 
   async findAll(
     queryDto: QueryRoutinesDto,
-    user: User,
+    user: UserProfile,
   ): Promise<{ data: Routine[]; total: number; page: number; limit: number }> {
     const { dayOfWeek, isPublic, createdById, page = 1, limit = 20 } = queryDto;
 
@@ -93,7 +94,7 @@ export class RoutinesService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: string, user: User): Promise<Routine> {
+  async findOne(id: string, user: UserProfile): Promise<Routine> {
     const routine = await this.routinesRepository.findOne({
       where: { id },
       relations: ['createdBy', 'exercises', 'exercises.exercise'],
@@ -119,7 +120,7 @@ export class RoutinesService {
   async update(
     id: string,
     updateRoutineDto: UpdateRoutineDto,
-    user: User,
+    user: UserProfile,
   ): Promise<Routine> {
     const routine = await this.findOne(id, user);
 
@@ -136,7 +137,7 @@ export class RoutinesService {
     return this.findOne(id, user);
   }
 
-  async remove(id: string, user: User): Promise<void> {
+  async remove(id: string, user: UserProfile): Promise<void> {
     const routine = await this.findOne(id, user);
 
     // Only creator or ADMIN can delete
@@ -150,7 +151,7 @@ export class RoutinesService {
   async addExercise(
     routineId: string,
     addExerciseDto: AddExerciseToRoutineDto,
-    user: User,
+    user: UserProfile,
   ): Promise<RoutineExercise> {
     const routine = await this.findOne(routineId, user);
 
@@ -175,7 +176,7 @@ export class RoutinesService {
   async removeExercise(
     routineId: string,
     exerciseId: string,
-    user: User,
+    user: UserProfile,
   ): Promise<void> {
     const routine = await this.findOne(routineId, user);
 
@@ -203,7 +204,7 @@ export class RoutinesService {
     routineId: string,
     exerciseId: string,
     updateDto: Partial<AddExerciseToRoutineDto>,
-    user: User,
+    user: UserProfile,
   ): Promise<RoutineExercise> {
     const routine = await this.findOne(routineId, user);
 

@@ -5,7 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User, UserRole } from '../users/entities/user.entity';
+import type { UserProfile } from '../users/entities/user.entity';
+import { UserRole } from '../users/entities/user.entity';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { QueryExercisesDto } from './dto/query-exercises.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
@@ -20,7 +21,7 @@ export class ExercisesService {
 
   async create(
     createExerciseDto: CreateExerciseDto,
-    user: User,
+    user: UserProfile,
   ): Promise<Exercise> {
     // Only ADMIN and TRAINER can create exercises
     if (user.role !== UserRole.ADMIN && user.role !== UserRole.TRAINER) {
@@ -87,7 +88,7 @@ export class ExercisesService {
   async update(
     id: string,
     updateExerciseDto: UpdateExerciseDto,
-    user: User,
+    user: UserProfile,
   ): Promise<Exercise> {
     const exercise = await this.findOne(id);
 
@@ -102,7 +103,7 @@ export class ExercisesService {
     return this.exercisesRepository.save(exercise);
   }
 
-  async remove(id: string, user: User): Promise<void> {
+  async remove(id: string, user: UserProfile): Promise<void> {
     const exercise = await this.findOne(id);
 
     // Only creator or ADMIN can delete

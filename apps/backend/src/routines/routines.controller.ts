@@ -9,9 +9,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { GetUser } from '../auth/decorators/get-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { User } from '../users/entities/user.entity';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { UserProfile } from '../users/entities/user.entity';
 import { AddExerciseToRoutineDto } from './dto/add-exercise-to-routine.dto';
 import { CreateRoutineDto } from './dto/create-routine.dto';
 import { QueryRoutinesDto } from './dto/query-routines.dto';
@@ -24,17 +24,17 @@ export class RoutinesController {
   constructor(private readonly routinesService: RoutinesService) {}
 
   @Post()
-  create(@Body() createRoutineDto: CreateRoutineDto, @GetUser() user: User) {
+  create(@Body() createRoutineDto: CreateRoutineDto, @CurrentUser() user: UserProfile) {
     return this.routinesService.create(createRoutineDto, user);
   }
 
   @Get()
-  findAll(@Query() queryDto: QueryRoutinesDto, @GetUser() user: User) {
+  findAll(@Query() queryDto: QueryRoutinesDto, @CurrentUser() user: UserProfile) {
     return this.routinesService.findAll(queryDto, user);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @GetUser() user: User) {
+  findOne(@Param('id') id: string, @CurrentUser() user: UserProfile) {
     return this.routinesService.findOne(id, user);
   }
 
@@ -42,13 +42,13 @@ export class RoutinesController {
   update(
     @Param('id') id: string,
     @Body() updateRoutineDto: UpdateRoutineDto,
-    @GetUser() user: User,
+    @CurrentUser() user: UserProfile,
   ) {
     return this.routinesService.update(id, updateRoutineDto, user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @GetUser() user: User) {
+  remove(@Param('id') id: string, @CurrentUser() user: UserProfile) {
     return this.routinesService.remove(id, user);
   }
 
@@ -56,7 +56,7 @@ export class RoutinesController {
   addExercise(
     @Param('id') id: string,
     @Body() addExerciseDto: AddExerciseToRoutineDto,
-    @GetUser() user: User,
+    @CurrentUser() user: UserProfile,
   ) {
     return this.routinesService.addExercise(id, addExerciseDto, user);
   }
@@ -65,7 +65,7 @@ export class RoutinesController {
   removeExercise(
     @Param('routineId') routineId: string,
     @Param('exerciseId') exerciseId: string,
-    @GetUser() user: User,
+    @CurrentUser() user: UserProfile,
   ) {
     return this.routinesService.removeExercise(routineId, exerciseId, user);
   }
@@ -75,7 +75,7 @@ export class RoutinesController {
     @Param('routineId') routineId: string,
     @Param('exerciseId') exerciseId: string,
     @Body() updateDto: Partial<AddExerciseToRoutineDto>,
-    @GetUser() user: User,
+    @CurrentUser() user: UserProfile,
   ) {
     return this.routinesService.updateExerciseInRoutine(
       routineId,
