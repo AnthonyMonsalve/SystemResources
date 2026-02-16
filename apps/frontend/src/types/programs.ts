@@ -1,4 +1,4 @@
-import { Routine } from './routines';
+import type { Routine } from './routines';
 
 // Import enums from users
 export enum FitnessLevel {

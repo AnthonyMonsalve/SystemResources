@@ -1,4 +1,4 @@
-import { Exercise } from './exercises';
+import type { Exercise } from './exercises';
 
 // Enums matching backend
 export enum DayOfWeek {

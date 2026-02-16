@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
+import type { Exercise } from '../../types/exercises';
 import {
-  Exercise,
   MUSCLE_GROUP_LABELS,
   EQUIPMENT_LABELS,
   DIFFICULTY_LABELS,

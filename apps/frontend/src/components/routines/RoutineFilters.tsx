@@ -1,9 +1,9 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilter, faXmark } from '@fortawesome/free-solid-svg-icons';
+import type { QueryRoutinesParams } from '../../types/routines';
 import {
   DayOfWeek,
   DAY_LABELS,
-  QueryRoutinesParams,
 } from '../../types/routines';
 
 interface RoutineFiltersProps {

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
+import type { TrainingProgram } from '../../types/programs';
 import {
-  TrainingProgram,
   FITNESS_LEVEL_LABELS,
   FITNESS_GOAL_LABELS,
   GOAL_COLORS,

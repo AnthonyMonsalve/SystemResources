@@ -1,11 +1,11 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilter, faXmark } from '@fortawesome/free-solid-svg-icons';
+import type { QueryProgramsParams } from '../../types/programs';
 import {
   FitnessLevel,
   FitnessGoal,
   FITNESS_LEVEL_LABELS,
   FITNESS_GOAL_LABELS,
-  QueryProgramsParams,
 } from '../../types/programs';
 
 interface ProgramFiltersProps {

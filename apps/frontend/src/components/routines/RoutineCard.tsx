@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
+import type { Routine } from '../../types/routines';
 import {
-  Routine,
   DAY_LABELS,
   calculateRoutineDuration,
   formatDuration,

@@ -1,3 +1,4 @@
+import type { QueryExercisesParams } from '../../types/exercises';
 import {
   MuscleGroup,
   EquipmentType,
@@ -5,7 +6,6 @@ import {
   MUSCLE_GROUP_LABELS,
   EQUIPMENT_LABELS,
   DIFFICULTY_LABELS,
-  QueryExercisesParams,
 } from '../../types/exercises';
 
 interface ExerciseFiltersProps {
