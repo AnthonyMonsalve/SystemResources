@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import DashboardLayout from './components/layout/DashboardLayout';
+import { DashboardPage } from './pages/Dashboard';
 import { HomePage } from './pages/Home';
 import { LoginPage } from './pages/Login';
 import { PostDetailPage } from './pages/PostDetail';
@@ -21,8 +22,8 @@ export default function App() {
       {/* Protected routes with DashboardLayout */}
       <Route element={<DashboardLayout />}>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<HomePage />} />
-        <Route path="/home" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/home" element={<HomePage />} />
 
         {/* Legacy routes - mantener por ahora */}
         <Route path="/posts/:id" element={<PostDetailPage />} />
