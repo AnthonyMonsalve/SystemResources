@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
+import { CommentForm } from "../components/shared/CommentForm";
+import { CommentsList } from "../components/shared/CommentsList";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, apiFetch } from "../lib/api";
 import { sanitizeHtml } from "../lib/richText";
 import { resolveMediaUrl } from "../lib/media";
+import type { Comment } from "../types/comments";
 import type { Post, PostMedia, PostVisibility } from "../types/posts";
 
 export function PostDetailPage() {
@@ -12,6 +15,7 @@ export function PostDetailPage() {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [commentsKey, setCommentsKey] = useState(0);
 
   useEffect(() => {
     if (!token || !id) return;
@@ -29,6 +33,16 @@ export function PostDetailPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCommentCreated = (comment: Comment) => {
+    // Refrescar la lista de comentarios
+    setCommentsKey((prev) => prev + 1);
+  };
+
+  const handleCommentDeleted = () => {
+    // Refrescar la lista de comentarios
+    setCommentsKey((prev) => prev + 1);
   };
 
   if (!token && !initializing) {
@@ -111,6 +125,27 @@ export function PostDetailPage() {
                 No hay archivos adjuntos.
               </p>
             )}
+          </div>
+
+          {/* Sección de Comentarios */}
+          <div className="space-y-4 border-t border-slate-200 pt-6">
+            <h2 className="text-lg font-semibold text-slate-900">Comentarios</h2>
+
+            {/* Formulario para nuevo comentario */}
+            <CommentForm
+              postId={post.id}
+              onCommentCreated={handleCommentCreated}
+            />
+
+            {/* Lista de comentarios */}
+            <CommentsList
+              key={commentsKey}
+              postId={post.id}
+              currentUserId={user?.id}
+              postAuthorId={post.createdById}
+              isAdmin={user?.role === "admin"}
+              onCommentDeleted={handleCommentDeleted}
+            />
           </div>
         </div>
       ) : null}
