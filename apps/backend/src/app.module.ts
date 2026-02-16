@@ -6,9 +6,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CommentsModule } from './comments/comments.module';
+import { ExercisesModule } from './exercises/exercises.module';
 import { GroupsModule } from './groups/groups.module';
 import { MediaModule } from './media/media.module';
 import { PostsModule } from './posts/posts.module';
+import { ProgramsModule } from './programs/programs.module';
+import { RoutinesModule } from './routines/routines.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { UsersModule } from './users/users.module';
 
@@ -35,6 +38,9 @@ import { UsersModule } from './users/users.module';
     MediaModule,
     CommentsModule,
     SubscriptionsModule,
+    ExercisesModule,
+    RoutinesModule,
+    ProgramsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

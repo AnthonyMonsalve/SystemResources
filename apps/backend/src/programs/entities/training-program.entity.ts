@@ -25,7 +25,7 @@ export class TrainingProgram {
   @Column({ type: 'int' })
   durationWeeks: number; // Duration in weeks
 
-  @OneToMany(() => Routine, (routine) => routine)
+  @OneToMany(() => Routine, (routine) => routine.program)
   routines: Routine[];
 
   @Column({

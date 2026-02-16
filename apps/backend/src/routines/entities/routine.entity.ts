@@ -7,6 +7,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { TrainingProgram } from '../../programs/entities/training-program.entity';
 import { User } from '../../users/entities/user.entity';
 import { RoutineExercise } from './routine-exercise.entity';
 
@@ -43,6 +44,14 @@ export class Routine {
 
   @Column({ type: 'boolean', default: false })
   isPublic: boolean; // For feed público
+
+  @Column({ type: 'uuid', nullable: true })
+  programId?: string;
+
+  @ManyToOne(() => TrainingProgram, (program) => program.routines, {
+    onDelete: 'SET NULL',
+  })
+  program?: TrainingProgram;
 
   @Column({ type: 'uuid' })
   createdById: string;
