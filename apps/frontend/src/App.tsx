@@ -82,11 +82,11 @@ export default function App() {
             className="flex items-center gap-3"
             aria-label="Ir a inicio"
           >
-            <div className="h-10 w-10 rounded-lg accent-gradient" />
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 shadow-md" />
             <div>
-              <p className="text-sm text-slate-500">La TV Calle</p>
-              <p className="text-lg font-semibold text-slate-900">
-                Portal de Recursos
+              <p className="text-sm text-primary-600 font-medium">Fitness</p>
+              <p className="text-lg font-bold text-slate-900">
+                BeFitness.App
               </p>
             </div>
           </NavLink>
@@ -203,11 +203,11 @@ export default function App() {
               onClick={handleMobileNavClick}
               aria-label="Ir a inicio"
             >
-              <div className="h-9 w-9 rounded-lg accent-gradient" />
+              <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 shadow-md" />
               <div>
-                <p className="text-xs text-slate-500">La TV Calle</p>
-                <p className="text-base font-semibold text-slate-900">
-                  Portal de Recursos
+                <p className="text-xs text-primary-600 font-medium">Fitness</p>
+                <p className="text-base font-bold text-slate-900">
+                  BeFitness.App
                 </p>
               </div>
             </NavLink>
