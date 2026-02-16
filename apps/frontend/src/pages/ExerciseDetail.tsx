@@ -15,13 +15,7 @@ import LoadingSpinner from '../components/shared/LoadingSpinner';
 import InfoCard from '../components/shared/InfoCard';
 import ParamCard from '../components/shared/ParamCard';
 import { ConfirmModal } from '../shared/ConfirmModal';
-import type {
-  Exercise,
-  MUSCLE_GROUP_LABELS,
-  EQUIPMENT_LABELS,
-  DIFFICULTY_LABELS,
-  DIFFICULTY_COLORS,
-} from '../types/exercises';
+import type { Exercise } from '../types/exercises';
 import {
   MuscleGroup,
   EquipmentType,
