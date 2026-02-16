@@ -9,6 +9,7 @@ import { CommentsModule } from './comments/comments.module';
 import { GroupsModule } from './groups/groups.module';
 import { MediaModule } from './media/media.module';
 import { PostsModule } from './posts/posts.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -33,6 +34,7 @@ import { UsersModule } from './users/users.module';
     PostsModule,
     MediaModule,
     CommentsModule,
+    SubscriptionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
