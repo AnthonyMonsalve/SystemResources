@@ -9,21 +9,33 @@ import ProgramFilters from '../components/programs/ProgramFilters';
 import Pagination from '../components/shared/Pagination';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
-import type { QueryProgramsParams } from '../types/programs';
+import { AssignProgramModal } from '../components/programs/AssignProgramModal';
+import type { QueryProgramsParams, TrainingProgram } from '../types/programs';
 
 export function ProgramsPage() {
   const { user } = useAuth();
   const [filters, setFilters] = useState<QueryProgramsParams>({});
   const [page, setPage] = useState(1);
   const limit = 12;
+  const [selectedProgram, setSelectedProgram] = useState<TrainingProgram | null>(null);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 
-  const { programs, loading, error, total } = usePrograms(filters, page, limit);
+  const { programs, loading, error, total, refetch } = usePrograms(filters, page, limit);
   const totalPages = Math.ceil(total / limit);
   const canCreate = user?.role === 'trainer' || user?.role === 'admin';
   const isClient = user?.role === 'client';
 
   // Clients only see their assigned programs
   const clientFilters = isClient ? { ...filters, clientId: user?.id } : filters;
+
+  const handleAssign = (program: TrainingProgram) => {
+    setSelectedProgram(program);
+    setIsAssignModalOpen(true);
+  };
+
+  const handleAssignSuccess = () => {
+    refetch();
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -94,6 +106,7 @@ export function ProgramsPage() {
                 key={program.id}
                 program={program}
                 showActions={canCreate && program.createdById === user?.id}
+                onAssign={canCreate ? handleAssign : undefined}
               />
             ))}
           </div>
@@ -107,6 +120,16 @@ export function ProgramsPage() {
             />
           )}
         </>
+      )}
+
+      {/* Assign Program Modal */}
+      {selectedProgram && (
+        <AssignProgramModal
+          isOpen={isAssignModalOpen}
+          onClose={() => setIsAssignModalOpen(false)}
+          onSuccess={handleAssignSuccess}
+          program={selectedProgram}
+        />
       )}
     </div>
   );

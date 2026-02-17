@@ -89,6 +89,16 @@ export class User {
   @Column({ type: 'uuid', nullable: true })
   trainerId?: string;
 
+  // Subscription fields
+  @Column({ type: 'timestamptz', nullable: true })
+  subscriptionStartDate?: Date | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  subscriptionEndDate?: Date | null;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  subscriptionStatus?: 'active' | 'expired' | 'cancelled' | null;
+
   @ManyToOne(() => User, (user) => user.clients)
   trainer?: User;
 
@@ -134,4 +144,8 @@ export type UserProfile = Pick<
   | 'goal'
   | 'fitnessLevel'
   | 'trainerId'
+  // Subscription fields
+  | 'subscriptionStartDate'
+  | 'subscriptionEndDate'
+  | 'subscriptionStatus'
 >;

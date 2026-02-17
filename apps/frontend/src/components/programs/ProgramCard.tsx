@@ -11,6 +11,7 @@ interface ProgramCardProps {
   program: TrainingProgram;
   onEdit?: (program: TrainingProgram) => void;
   onDelete?: (program: TrainingProgram) => void;
+  onAssign?: (program: TrainingProgram) => void;
   showActions?: boolean;
   currentUserId?: string;
 }
@@ -19,6 +20,7 @@ export default function ProgramCard({
   program,
   onEdit,
   onDelete,
+  onAssign,
   showActions = false,
   currentUserId,
 }: ProgramCardProps) {
@@ -110,6 +112,17 @@ export default function ProgramCard({
 
         {/* Actions */}
         <div className="flex gap-2">
+          {onAssign && (
+            <button
+              onClick={() => onAssign(program)}
+              className="flex-1 bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+              title="Asignar a cliente"
+            >
+              <i className="fas fa-user-plus"></i>
+              Asignar
+            </button>
+          )}
+
           <Link
             to={`/programs/${program.id}`}
             className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-center text-sm font-medium"

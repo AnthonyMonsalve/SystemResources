@@ -26,6 +26,10 @@ export type UserProfile = {
   goal?: FitnessGoal;
   fitnessLevel?: FitnessLevel;
   trainerId?: string;
+  // Subscription fields
+  subscriptionStartDate?: string | null;
+  subscriptionEndDate?: string | null;
+  subscriptionStatus?: 'active' | 'expired' | 'cancelled' | null;
 };
 
 export type AuthResponse = {

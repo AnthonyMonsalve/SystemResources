@@ -14,7 +14,7 @@ export function RegisterPage() {
 
   useEffect(() => {
     if (readTokenCookie()) {
-      navigate("/home", { replace: true });
+      navigate("/dashboard", { replace: true });
     }
   }, [navigate]);
 
@@ -31,7 +31,7 @@ export function RegisterPage() {
       return;
     }
     void register({ name, email, password })
-      .then(() => navigate("/home"))
+      .then(() => navigate("/dashboard"))
       .catch((err: unknown) => {
         if (err instanceof ApiError) {
           setError(err.message);

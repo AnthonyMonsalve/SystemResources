@@ -13,7 +13,7 @@ export function LoginPage() {
 
   useEffect(() => {
     if (readTokenCookie()) {
-      navigate("/home", { replace: true });
+      navigate("/dashboard", { replace: true });
     }
   }, [navigate]);
 
@@ -24,7 +24,7 @@ export function LoginPage() {
     const password = (formData.get("password") as string) ?? "";
     setError(null);
     void login({ email, password })
-      .then(() => navigate("/home"))
+      .then(() => navigate("/dashboard"))
       .catch((err: unknown) => {
         if (err instanceof ApiError) {
           setError(err.message);

@@ -6,7 +6,6 @@ import {
   faListCheck,
   faCalendarDays,
   faUsers,
-  faPlus,
 } from '@fortawesome/free-solid-svg-icons';
 import type { UserProfile } from '../../types/auth';
 import { apiFetch } from '../../lib/api';
@@ -39,18 +38,18 @@ export default function TrainerDashboard({ user, token }: TrainerDashboardProps)
     setLoading(true);
     try {
       // Fetch stats from multiple endpoints
-      const [exercises, routines, programs, clients] = await Promise.all([
+      const [exercises, routines, programs, clientsList] = await Promise.all([
         apiFetch<{ total: number }>('/exercises?limit=1', { token }),
         apiFetch<{ total: number }>('/routines?limit=1', { token }),
         apiFetch<{ total: number }>('/programs?limit=1', { token }),
-        apiFetch<{ total: number }>(`/users?role=client&trainerId=${user.id}&limit=1`, { token }),
+        apiFetch<Array<unknown>>('/trainer/clients', { token }),
       ]);
 
       setStats({
         exercises: exercises.total || 0,
         routines: routines.total || 0,
         programs: programs.total || 0,
-        clients: clients.total || 0,
+        clients: clientsList.length || 0,
       });
     } catch (err) {
       console.error('Error fetching stats:', err);

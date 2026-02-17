@@ -15,6 +15,7 @@ import { RoutinesModule } from './routines/routines.module';
 import { SeedModule } from './seed/seed.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { UsersModule } from './users/users.module';
+import { WorkoutsModule } from './workouts/workouts.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { UsersModule } from './users/users.module';
     ExercisesModule,
     RoutinesModule,
     ProgramsModule,
+    WorkoutsModule,
     SeedModule,
   ],
   controllers: [AppController],

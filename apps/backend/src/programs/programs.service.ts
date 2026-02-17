@@ -294,7 +294,14 @@ export class ProgramsService {
 
     const programClients = await this.programClientsRepository.find({
       where: { clientId },
-      relations: ['program', 'program.createdBy', 'program.routines'],
+      relations: [
+        'program',
+        'program.createdBy',
+        'program.routines',
+        'program.routines.exercises',
+        'program.routines.exercises.exercise',
+        'program.assignedClients',
+      ],
     });
 
     return programClients.map((pc) => pc.program);

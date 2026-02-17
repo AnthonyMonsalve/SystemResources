@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import DashboardLayout from './components/layout/DashboardLayout';
+import AuthLayout from './components/layout/AuthLayout';
+import { LandingPage } from './pages/Landing';
 import { DashboardPage } from './pages/Dashboard';
 import { HomePage } from './pages/Home';
 import { LoginPage } from './pages/Login';
@@ -20,17 +22,28 @@ import { ProgramDetailPage } from './pages/ProgramDetail';
 import { ExerciseFormPage } from './pages/ExerciseForm';
 import { RoutineFormPage } from './pages/RoutineForm';
 import { ProgramFormPage } from './pages/ProgramForm';
+import { MyClientsPage } from './pages/MyClients';
+import { MyProgramsPage } from './pages/MyPrograms';
+import { MyProgressPage } from './pages/MyProgress';
+import { MyRoutinesPage } from './pages/MyRoutines';
+import { ClientProgressPage } from './pages/ClientProgress';
+import { WorkoutSessionPage } from './pages/WorkoutSession';
 
 export default function App() {
   return (
     <Routes>
-      {/* Public routes */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/registro" element={<RegisterPage />} />
+      {/* Landing page */}
+      <Route path="/" element={<LandingPage />} />
+
+      {/* Auth routes with AuthLayout */}
+      <Route element={<AuthLayout />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/registro" element={<RegisterPage />} />
+      </Route>
 
       {/* Protected routes with DashboardLayout */}
       <Route element={<DashboardLayout />}>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/home" element={<HomePage />} />
 
@@ -43,10 +56,18 @@ export default function App() {
         <Route path="/routines/new" element={<RoutineFormPage />} />
         <Route path="/routines/:id" element={<RoutineDetailPage />} />
         <Route path="/routines/:id/edit" element={<RoutineFormPage />} />
+        <Route path="/workouts/session/:routineId" element={<WorkoutSessionPage />} />
         <Route path="/programs" element={<ProgramsPage />} />
         <Route path="/programs/new" element={<ProgramFormPage />} />
         <Route path="/programs/:id" element={<ProgramDetailPage />} />
         <Route path="/programs/:id/edit" element={<ProgramFormPage />} />
+
+        {/* Client/Trainer specific routes */}
+        <Route path="/my-clients" element={<MyClientsPage />} />
+        <Route path="/clients/:clientId/progress" element={<ClientProgressPage />} />
+        <Route path="/my-programs" element={<MyProgramsPage />} />
+        <Route path="/my-routines" element={<MyRoutinesPage />} />
+        <Route path="/my-progress" element={<MyProgressPage />} />
 
         {/* Legacy routes - mantener por ahora */}
         <Route path="/posts/:id" element={<PostDetailPage />} />
