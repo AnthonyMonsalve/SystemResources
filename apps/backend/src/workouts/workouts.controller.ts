@@ -7,7 +7,12 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { UserProfile } from '../users/entities/user.entity';
@@ -77,5 +82,35 @@ export class WorkoutsController {
     @CurrentUser() user: UserProfile,
   ) {
     return this.workoutsService.getHistory(queryDto, user);
+  }
+
+  @Post('sessions/:sessionId/photos')
+  @UseInterceptors(
+    FilesInterceptor('photos', 5, {
+      storage: diskStorage({
+        destination: './uploads/workout-photos',
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          cb(null, `workout-${uniqueSuffix}${ext}`);
+        },
+      }),
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB max per file
+      },
+      fileFilter: (req, file, cb) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+          return cb(new Error('Only image files are allowed!'), false);
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  async uploadPhotos(
+    @Param('sessionId') sessionId: string,
+    @UploadedFiles() files: Express.Multer.File[],
+    @CurrentUser() user: UserProfile,
+  ) {
+    return this.workoutsService.addPhotos(sessionId, files, user);
   }
 }

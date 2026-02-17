@@ -1,5 +1,4 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import type { Multer } from 'multer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 import { basename } from 'path';
@@ -17,7 +16,7 @@ export class MediaService {
   ) {}
 
   async uploadFile(
-    file: Multer.File,
+    file: Express.Multer.File,
     dto: UploadMediaDto,
     currentUser: UserProfile,
   ): Promise<MediaFile> {

@@ -1,6 +1,7 @@
 import { useReducer, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../lib/api';
+import { WorkoutStatus, CommentType } from '../types/workouts';
 import type {
   WorkoutState,
   WorkoutAction,
@@ -9,8 +10,8 @@ import type {
   LogSetDto,
   AddCommentDto,
   UpdateSessionDto,
-  WorkoutStatus,
   ExerciseSet,
+  WorkoutComment,
 } from '../types/workouts';
 import type { RoutineExercise } from '../types/routines';
 
@@ -76,6 +77,12 @@ function workoutReducer(state: WorkoutState, action: WorkoutAction): WorkoutStat
         restTimeRemaining: action.payload.restSeconds,
       };
 
+    case 'TICK_REST':
+      return {
+        ...state,
+        restTimeRemaining: state.restTimeRemaining ? state.restTimeRemaining - 1 : null,
+      };
+
     case 'COMPLETE_REST':
       return {
         ...state,
@@ -135,6 +142,22 @@ export function useWorkoutSession(routineId: string) {
     initSession();
   }, [routineId]);
 
+  // Rest timer countdown
+  useEffect(() => {
+    if (state.status !== 'resting' || !state.restTimeRemaining) return;
+
+    if (state.restTimeRemaining <= 0) {
+      dispatch({ type: 'COMPLETE_REST' });
+      return;
+    }
+
+    const interval = setInterval(() => {
+      dispatch({ type: 'TICK_REST' });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [state.status, state.restTimeRemaining]);
+
   const initSession = async () => {
     if (!token) return;
 
@@ -186,6 +209,14 @@ export function useWorkoutSession(routineId: string) {
         const currentExercise = getCurrentExercise();
         if (!currentExercise) return;
 
+        // Check if this is the last set BEFORE updating state
+        const targetSets = currentExercise.sets || currentExercise.exercise?.defaultSets || 3;
+        const completedSetsForExercise = state.completedSets.filter(
+          (set) => set.routineExerciseId === currentExercise.id,
+        ).length;
+        const isLastSetOfExercise = completedSetsForExercise >= targetSets - 1;
+        const isLastExerciseInWorkout = state.currentExerciseIndex === (state.routine.exercises?.length || 0) - 1;
+
         const logSetDto: LogSetDto = {
           routineExerciseId: currentExercise.id,
           setNumber: state.currentSetNumber,
@@ -219,12 +250,12 @@ export function useWorkoutSession(routineId: string) {
           },
         });
 
-        // Start rest timer if not last set and not last exercise
+        // SIEMPRE iniciar descanso después de cada serie (incluso la última)
+        // Solo NO descansar si es la última serie del último ejercicio (fin de rutina)
         const restSeconds = currentExercise.rest || currentExercise.exercise?.defaultRest || 0;
-        const isLastSetOfExercise = isLastSet();
-        const isLastExerciseInWorkout = isLastExercise();
+        const isFinalSetOfRoutine = isLastSetOfExercise && isLastExerciseInWorkout;
 
-        if (restSeconds > 0 && !isLastSetOfExercise && !isLastExerciseInWorkout) {
+        if (restSeconds > 0 && !isFinalSetOfRoutine) {
           dispatch({ type: 'START_REST', payload: { restSeconds } });
         }
       } catch (error) {
@@ -234,7 +265,7 @@ export function useWorkoutSession(routineId: string) {
         });
       }
     },
-    [token, state.sessionId, state.routine, state.currentSetNumber],
+    [token, state.sessionId, state.routine, state.currentSetNumber, state.completedSets, state.currentExerciseIndex],
   );
 
   const pauseWorkout = useCallback(async () => {
@@ -325,7 +356,7 @@ export function useWorkoutSession(routineId: string) {
   }, [token, state.sessionId, state.routine, state.currentSetNumber]);
 
   const addComment = useCallback(
-    async (content: string, type: AddCommentDto['type'] = 'note') => {
+    async (content: string, type: CommentType = CommentType.NOTE) => {
       if (!token || !state.sessionId) return;
 
       const currentExercise = getCurrentExercise();
@@ -338,7 +369,7 @@ export function useWorkoutSession(routineId: string) {
           type,
         };
 
-        const comment = await apiFetch(`/workouts/sessions/${state.sessionId}/comments`, {
+        const comment = await apiFetch<WorkoutComment>(`/workouts/sessions/${state.sessionId}/comments`, {
           method: 'POST',
           token,
           body: commentDto,
@@ -371,7 +402,7 @@ export function useWorkoutSession(routineId: string) {
           body: updateDto,
         });
 
-        dispatch({ type: 'COMPLETE_WORKOUT', payload: { notes } });
+        dispatch({ type: 'COMPLETE_WORKOUT' });
 
         // Clear localStorage
         localStorage.removeItem(STORAGE_KEY);

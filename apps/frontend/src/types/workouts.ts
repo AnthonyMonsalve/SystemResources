@@ -112,10 +112,11 @@ export type WorkoutAction =
   | { type: 'PAUSE' }
   | { type: 'RESUME' }
   | { type: 'START_REST'; payload: { restSeconds: number } }
+  | { type: 'TICK_REST' }
   | { type: 'COMPLETE_REST' }
   | { type: 'SKIP_EXERCISE' }
   | { type: 'ADD_COMMENT'; payload: WorkoutComment }
-  | { type: 'COMPLETE_WORKOUT'; payload: { notes?: string } }
+  | { type: 'COMPLETE_WORKOUT' }
   | { type: 'SET_ERROR'; payload: string }
   | { type: 'UPDATE_ELAPSED_TIME'; payload: number };
 

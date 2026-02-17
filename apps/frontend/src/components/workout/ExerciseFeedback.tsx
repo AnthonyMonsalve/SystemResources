@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faComment, faChevronDown, faChevronUp, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
-import type { CommentType } from '../../types/workouts';
+import { CommentType } from '../../types/workouts';
 
 interface ExerciseFeedbackProps {
   routineExerciseId: string;
@@ -18,7 +18,7 @@ export function ExerciseFeedback({
 }: ExerciseFeedbackProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [content, setContent] = useState('');
-  const [type, setType] = useState<CommentType>('note');
+  const [type, setType] = useState<CommentType>(CommentType.NOTE);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,9 +80,9 @@ export function ExerciseFeedback({
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => setType('question')}
+                onClick={() => setType(CommentType.QUESTION)}
                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                  type === 'question'
+                  type === CommentType.QUESTION
                     ? 'bg-blue-500 text-white'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
@@ -91,9 +91,9 @@ export function ExerciseFeedback({
               </button>
               <button
                 type="button"
-                onClick={() => setType('issue')}
+                onClick={() => setType(CommentType.ISSUE)}
                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                  type === 'issue'
+                  type === CommentType.ISSUE
                     ? 'bg-red-500 text-white'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
@@ -102,9 +102,9 @@ export function ExerciseFeedback({
               </button>
               <button
                 type="button"
-                onClick={() => setType('note')}
+                onClick={() => setType(CommentType.NOTE)}
                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                  type === 'note'
+                  type === CommentType.NOTE
                     ? 'bg-green-500 text-white'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
@@ -125,9 +125,9 @@ export function ExerciseFeedback({
               className="input w-full resize-none"
               rows={4}
               placeholder={
-                type === 'question'
+                type === CommentType.QUESTION
                   ? '¿Cómo debo hacer este ejercicio correctamente?'
-                  : type === 'issue'
+                  : type === CommentType.ISSUE
                   ? 'Describo el problema que tuve...'
                   : 'Mis notas sobre este ejercicio...'
               }

@@ -113,7 +113,7 @@ export class WorkoutsService {
             (new Date().getTime() - session.pausedAt.getTime()) / 1000,
           );
           // Don't add pause time to total duration
-          session.pausedAt = null;
+          session.pausedAt = undefined;
         }
       }
 
@@ -213,7 +213,14 @@ export class WorkoutsService {
       session.currentSetNumber = completedSets + 1;
     }
 
-    await this.sessionsRepository.save(session);
+    // Update only session fields without cascading to relations
+    await this.sessionsRepository.update(session.id, {
+      currentExerciseIndex: session.currentExerciseIndex,
+      currentSetNumber: session.currentSetNumber,
+      status: session.status,
+      completedAt: session.completedAt,
+      totalDurationSeconds: session.totalDurationSeconds,
+    });
   }
 
   async addComment(
@@ -277,5 +284,34 @@ export class WorkoutsService {
       .getManyAndCount();
 
     return { data, total, page, limit };
+  }
+
+  async addPhotos(
+    sessionId: string,
+    files: Express.Multer.File[],
+    user: UserProfile,
+  ): Promise<WorkoutSession> {
+    const session = await this.sessionsRepository.findOne({
+      where: { id: sessionId },
+    });
+
+    if (!session) {
+      throw new NotFoundException('Workout session not found');
+    }
+
+    // Verify user owns this session
+    if (session.userId !== user.id) {
+      throw new ForbiddenException('You can only add photos to your own workout sessions');
+    }
+
+    // Generate photo URLs (relative paths)
+    const photoUrls = files.map((file) => `/uploads/workout-photos/${file.filename}`);
+
+    // Add new photos to existing ones (or initialize if null)
+    session.photos = [...(session.photos || []), ...photoUrls];
+
+    await this.sessionsRepository.save(session);
+
+    return session;
   }
 }

@@ -132,7 +132,10 @@ export function RoutineDetailPage() {
           {/* Action Buttons */}
           <div className="flex gap-2">
             {isClient && (
-              <button className="btn-primary">
+              <button
+                onClick={() => navigate(`/workouts/session/${routine.id}`)}
+                className="btn-primary"
+              >
                 <FontAwesomeIcon icon={faPlay} className="mr-2" />
                 Comenzar Rutina
               </button>

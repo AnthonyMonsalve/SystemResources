@@ -71,6 +71,9 @@ export class WorkoutSession {
   @Column({ type: 'text', nullable: true })
   notes?: string;
 
+  @Column({ type: 'text', array: true, nullable: true, default: [] })
+  photos?: string[];
+
   @OneToMany(() => ExerciseSet, (set) => set.session, { cascade: true })
   sets: ExerciseSet[];
 
