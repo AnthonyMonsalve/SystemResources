@@ -7,6 +7,8 @@ import {
   faTrophy,
   faCalendarCheck,
 } from '@fortawesome/free-solid-svg-icons';
+import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../lib/api';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 
 type ProgressStats = {
@@ -29,6 +31,7 @@ type WorkoutHistory = {
 };
 
 export function MyProgressPage() {
+  const { token } = useAuth();
   const [stats, setStats] = useState<ProgressStats | null>(null);
   const [history, setHistory] = useState<WorkoutHistory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,18 +42,100 @@ export function MyProgressPage() {
   }, []);
 
   const fetchProgress = async () => {
+    if (!token) return;
+
     try {
       setLoading(true);
-      // TODO: Endpoints /progress/stats and /progress/history need to be implemented
-      // For now, return placeholder data
+
+      // Fetch workout history (max 100 per request)
+      const response = await apiFetch<{ data: any[] }>(
+        '/workouts/history?status=completed&limit=100',
+        { token }
+      );
+
+      const sessions = response.data || [];
+
+      // Map to WorkoutHistory format
+      const historyData: WorkoutHistory[] = sessions.map((session) => ({
+        id: session.id,
+        date: session.completedAt || session.startedAt,
+        routineName: session.routine?.name || 'Rutina sin nombre',
+        duration: Math.round((session.totalDurationSeconds || 0) / 60),
+        exercisesCompleted: session.routine?.exercises?.length || 0,
+        calories: session.routine?.estimatedCalories,
+      }));
+
+      // Calculate statistics
+      const totalWorkouts = sessions.length;
+
+      // Calculate streaks
+      const dates = sessions
+        .map((s) => new Date(s.completedAt || s.startedAt))
+        .sort((a, b) => b.getTime() - a.getTime()); // Most recent first
+
+      let currentStreak = 0;
+      let longestStreak = 0;
+      let tempStreak = 0;
+      let lastDate: Date | null = null;
+
+      for (const date of dates) {
+        const dateStr = date.toDateString();
+
+        if (!lastDate) {
+          // First date
+          const today = new Date().toDateString();
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          const yesterdayStr = yesterday.toDateString();
+
+          if (dateStr === today || dateStr === yesterdayStr) {
+            currentStreak = 1;
+          }
+          tempStreak = 1;
+        } else {
+          const diffDays = Math.floor(
+            (lastDate.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
+          );
+
+          if (diffDays === 1) {
+            tempStreak++;
+            if (currentStreak > 0) {
+              currentStreak++;
+            }
+          } else {
+            longestStreak = Math.max(longestStreak, tempStreak);
+            tempStreak = 1;
+            currentStreak = 0;
+          }
+        }
+
+        lastDate = date;
+      }
+      longestStreak = Math.max(longestStreak, tempStreak);
+
+      // Calculate total weeks with at least one workout
+      const weeks = new Set(
+        dates.map((date) => {
+          const weekStart = new Date(date);
+          const day = weekStart.getDay();
+          const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1);
+          weekStart.setDate(diff);
+          return weekStart.toDateString();
+        })
+      );
+      const totalWeeks = weeks.size;
+
+      // Calculate average workouts per week
+      const averageWorkoutsPerWeek = totalWeeks > 0 ? totalWorkouts / totalWeeks : 0;
+
       const statsData: ProgressStats = {
-        totalWorkouts: 0,
-        currentStreak: 0,
-        longestStreak: 0,
-        totalWeeks: 0,
-        averageWorkoutsPerWeek: 0,
+        totalWorkouts,
+        currentStreak,
+        longestStreak,
+        totalWeeks,
+        averageWorkoutsPerWeek,
       };
-      const historyData: WorkoutHistory[] = [];
+
       setStats(statsData);
       setHistory(historyData);
     } catch (err) {

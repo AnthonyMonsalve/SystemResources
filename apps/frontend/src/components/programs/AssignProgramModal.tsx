@@ -87,6 +87,7 @@ export function AssignProgramModal({
   // Filter out clients already assigned to this program
   const assignedClientIds = program.assignedClients.map((ac) => ac.clientId);
   const availableClients = clients.filter((c) => !assignedClientIds.includes(c.id));
+  const selectedClient = clients.find((c) => c.id === selectedClientId);
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -116,10 +117,26 @@ export function AssignProgramModal({
           {/* Client Selection */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Seleccionar cliente *
+              {preselectedClientId ? 'Cliente seleccionado' : 'Seleccionar cliente *'}
             </label>
             {loadingClients ? (
               <div className="text-sm text-slate-500 py-2">Cargando clientes...</div>
+            ) : preselectedClientId && selectedClient ? (
+              <div className="p-4 bg-primary-50 border-2 border-primary-200 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-white font-semibold flex-shrink-0">
+                    {selectedClient.name?.[0]?.toUpperCase() || selectedClient.email[0].toUpperCase()}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-slate-900">
+                      {selectedClient.name || selectedClient.email}
+                    </p>
+                    {selectedClient.name && (
+                      <p className="text-sm text-slate-600">{selectedClient.email}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
             ) : availableClients.length === 0 ? (
               <div className="text-sm text-slate-500 py-2 bg-slate-50 rounded-xl px-4">
                 {clients.length === 0
@@ -132,7 +149,6 @@ export function AssignProgramModal({
                 value={selectedClientId}
                 onChange={(e) => setSelectedClientId(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                disabled={!!preselectedClientId}
               >
                 <option value="">Seleccionar cliente...</option>
                 {availableClients.map((client) => (

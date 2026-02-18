@@ -332,6 +332,19 @@ export function useWorkoutSession(routineId: string) {
         });
       }
 
+      // Update backend with new exercise index
+      const newExerciseIndex = state.currentExerciseIndex + 1;
+      const updateDto: UpdateSessionDto = {
+        currentExerciseIndex: newExerciseIndex,
+        currentSetNumber: 1,
+      };
+
+      await apiFetch(`/workouts/sessions/${state.sessionId}`, {
+        method: 'PATCH',
+        token,
+        body: updateDto,
+      });
+
       dispatch({ type: 'SKIP_EXERCISE' });
 
       // Fetch updated session
@@ -353,7 +366,46 @@ export function useWorkoutSession(routineId: string) {
         payload: error instanceof Error ? error.message : 'Error al saltar ejercicio',
       });
     }
-  }, [token, state.sessionId, state.routine, state.currentSetNumber]);
+  }, [token, state.sessionId, state.routine, state.currentSetNumber, state.currentExerciseIndex]);
+
+  const goToPreviousExercise = useCallback(async () => {
+    if (!token || !state.sessionId || !state.routine) return;
+    if (state.currentExerciseIndex === 0) return; // No ir atrás si ya estamos en el primero
+
+    try {
+      // Update backend with previous exercise index
+      const previousExerciseIndex = state.currentExerciseIndex - 1;
+      const updateDto: UpdateSessionDto = {
+        currentExerciseIndex: previousExerciseIndex,
+        currentSetNumber: 1,
+      };
+
+      await apiFetch(`/workouts/sessions/${state.sessionId}`, {
+        method: 'PATCH',
+        token,
+        body: updateDto,
+      });
+
+      // Fetch updated session
+      const updatedSession = await apiFetch<WorkoutSession>(
+        `/workouts/sessions/${state.sessionId}`,
+        { token },
+      );
+
+      dispatch({
+        type: 'INIT_SESSION',
+        payload: {
+          session: updatedSession,
+          routine: state.routine,
+        },
+      });
+    } catch (error) {
+      dispatch({
+        type: 'SET_ERROR',
+        payload: error instanceof Error ? error.message : 'Error al volver al ejercicio anterior',
+      });
+    }
+  }, [token, state.sessionId, state.routine, state.currentExerciseIndex]);
 
   const addComment = useCallback(
     async (content: string, type: CommentType = CommentType.NOTE) => {
@@ -449,6 +501,7 @@ export function useWorkoutSession(routineId: string) {
     pauseWorkout,
     resumeWorkout,
     skipExercise,
+    goToPreviousExercise,
     addComment,
     completeWorkout,
     completeRest,

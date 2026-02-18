@@ -91,13 +91,13 @@ export function ExerciseFormPage() {
       if (isEditMode) {
         await apiFetch(`/exercises/${id}`, {
           method: 'PATCH',
-          body: JSON.stringify(payload),
+          body: payload,
           token,
         });
       } else {
         await apiFetch('/exercises', {
           method: 'POST',
-          body: JSON.stringify(payload),
+          body: payload,
           token,
         });
       }
