@@ -13,6 +13,7 @@ import {
   faListCheck,
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../context/AuthContext';
+import { useAlert } from '../context/AlertContext';
 import { apiFetch } from '../lib/api';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
@@ -22,6 +23,7 @@ import type { Routine } from '../types/routines';
 
 export function SubscriptionsPage() {
   const { token } = useAuth();
+  const { showToast, confirm, alert: showAlert } = useAlert();
   const [clients, setClients] = useState<UserProfile[]>([]);
   const [expiringSoon, setExpiringSoon] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,17 +88,26 @@ export function SubscriptionsPage() {
         token,
       });
       setShowEditModal(false);
-      alert('Suscripción actualizada exitosamente');
+      showToast('Suscripción actualizada exitosamente', 'success');
       fetchData();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al actualizar suscripción');
+      await showAlert({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Error al actualizar suscripción',
+      });
     } finally {
       setSaving(false);
     }
   };
 
   const handleExtendSubscription = async (client: UserProfile, days: number) => {
-    if (!confirm(`¿Extender la suscripción de ${client.name || client.email} por ${days} días?`)) {
+    const confirmed = await confirm({
+      title: 'Extender suscripción',
+      message: `¿Extender la suscripción de ${client.name || client.email} por ${days} días?`,
+      confirmText: 'Extender',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -117,15 +128,25 @@ export function SubscriptionsPage() {
         token,
       });
 
-      alert(`Suscripción extendida por ${days} días exitosamente`);
+      showToast(`Suscripción extendida por ${days} días exitosamente`, 'success');
       fetchData();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al extender suscripción');
+      await showAlert({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Error al extender suscripción',
+      });
     }
   };
 
   const handleCancelSubscription = async (client: UserProfile) => {
-    if (!confirm(`¿Cancelar la suscripción de ${client.name || client.email}? El cliente perderá acceso inmediatamente.`)) {
+    const confirmed = await confirm({
+      title: 'Cancelar suscripción',
+      message: `¿Cancelar la suscripción de ${client.name || client.email}? El cliente perderá acceso inmediatamente.`,
+      confirmText: 'Cancelar suscripción',
+      type: 'danger',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -140,10 +161,13 @@ export function SubscriptionsPage() {
         token,
       });
 
-      alert('Suscripción cancelada exitosamente');
+      showToast('Suscripción cancelada exitosamente', 'success');
       fetchData();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al cancelar suscripción');
+      await showAlert({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Error al cancelar suscripción',
+      });
     }
   };
 

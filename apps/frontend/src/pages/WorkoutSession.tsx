@@ -1,10 +1,11 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faPause, faPlay, faForward, faRotateRight, faArrowRotateLeft } from '@fortawesome/free-solid-svg-icons';
+import { faXmark, faPause, faPlay, faForward, faBackward, faRotateRight, faArrowRotateLeft, faChevronDown, faChevronUp, faCheck, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
 import { useState, useEffect } from 'react';
 import { useWorkoutSession } from '../hooks/useWorkoutSession';
 import { WorkoutStatus } from '../types/workouts';
 import { useAuth } from '../context/AuthContext';
+import { useAlert } from '../context/AlertContext';
 import { apiUpload, apiFetch } from '../lib/api';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import { ConfirmModal } from '../shared/ConfirmModal';
@@ -20,8 +21,11 @@ export function WorkoutSessionPage() {
   const { routineId } = useParams<{ routineId: string }>();
   const navigate = useNavigate();
   const { token } = useAuth();
+  const { showToast, alert: showAlert } = useAlert();
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSkipModal, setShowSkipModal] = useState(false);
+  const [showFinishModal, setShowFinishModal] = useState(false);
+  const [showPreviousModal, setShowPreviousModal] = useState(false);
   const [showRestartRoutineModal, setShowRestartRoutineModal] = useState(false);
   const [showRestartExerciseModal, setShowRestartExerciseModal] = useState(false);
   const [motivationalMessage, setMotivationalMessage] = useState<{
@@ -47,6 +51,7 @@ export function WorkoutSessionPage() {
   });
   const [hasCheckedActiveSession, setHasCheckedActiveSession] = useState(false);
   const [pendingExerciseTransition, setPendingExerciseTransition] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   if (!routineId) {
     navigate('/my-routines');
@@ -59,6 +64,7 @@ export function WorkoutSessionPage() {
     pauseWorkout,
     resumeWorkout,
     skipExercise,
+    goToPreviousExercise,
     completeRest,
     addComment,
     completeWorkout,
@@ -159,6 +165,24 @@ export function WorkoutSessionPage() {
     setShowSkipModal(false);
   };
 
+  const handleFinishWorkout = () => {
+    setShowFinishModal(true);
+  };
+
+  const confirmFinishWorkout = async () => {
+    await completeWorkout();
+    setShowFinishModal(false);
+  };
+
+  const handleGoToPrevious = () => {
+    setShowPreviousModal(true);
+  };
+
+  const confirmGoToPrevious = async () => {
+    await goToPreviousExercise();
+    setShowPreviousModal(false);
+  };
+
   const handleRestartRoutine = () => {
     setShowRestartRoutineModal(true);
   };
@@ -181,7 +205,10 @@ export function WorkoutSessionPage() {
       window.location.reload();
     } catch (error) {
       console.error('Error al reiniciar rutina:', error);
-      alert('Error al reiniciar la rutina');
+      await showAlert({
+        type: 'error',
+        message: 'Error al reiniciar la rutina',
+      });
       setShowRestartRoutineModal(false);
     }
   };
@@ -195,15 +222,8 @@ export function WorkoutSessionPage() {
     }
 
     try {
-      // Borrar todos los sets completados de la sesión
-      for (const set of state.completedSets) {
-        await apiFetch(`/workouts/sessions/${state.sessionId}/sets/${set.id}`, {
-          method: 'DELETE',
-          token,
-        });
-      }
-
       // Resetear la sesión al primer ejercicio
+      // No es necesario borrar los sets antiguos - simplemente reiniciamos los índices
       await apiFetch(`/workouts/sessions/${state.sessionId}`, {
         method: 'PATCH',
         token,
@@ -221,7 +241,10 @@ export function WorkoutSessionPage() {
       window.location.reload();
     } catch (error) {
       console.error('Error al empezar de nuevo:', error);
-      alert('Error al empezar de nuevo');
+      await showAlert({
+        type: 'error',
+        message: 'Error al empezar de nuevo',
+      });
     }
   };
 
@@ -258,7 +281,10 @@ export function WorkoutSessionPage() {
       window.location.reload();
     } catch (error) {
       console.error('Error al reiniciar ejercicio:', error);
-      alert('Error al reiniciar el ejercicio');
+      await showAlert({
+        type: 'error',
+        message: 'Error al reiniciar el ejercicio',
+      });
     } finally {
       setShowRestartExerciseModal(false);
     }
@@ -354,7 +380,7 @@ export function WorkoutSessionPage() {
           } KB total)`);
         } catch (error) {
           console.error('Error uploading photos:', error);
-          alert('No se pudieron subir las fotos, pero tu entrenamiento se guardó correctamente.');
+          showToast('No se pudieron subir las fotos, pero tu entrenamiento se guardó correctamente.', 'warning');
         }
       }
 
@@ -458,41 +484,106 @@ export function WorkoutSessionPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Restart Exercise Button */}
-          <button
-            onClick={handleRestartExercise}
-            className="w-12 h-12 rounded-full bg-orange-500/20 hover:bg-orange-500/30 transition flex items-center justify-center border border-orange-500/40"
-            title="Reiniciar ejercicio actual"
-          >
-            <FontAwesomeIcon icon={faArrowRotateLeft} className="text-lg text-orange-400" />
-          </button>
-
-          {/* Restart Routine Button */}
-          <button
-            onClick={handleRestartRoutine}
-            className="w-12 h-12 rounded-full bg-red-500/20 hover:bg-red-500/30 transition flex items-center justify-center border border-red-500/40"
-            title="Reiniciar toda la rutina"
-          >
-            <FontAwesomeIcon icon={faRotateRight} className="text-lg text-red-400" />
-          </button>
-
-          {state.status !== 'resting' && state.status !== WorkoutStatus.PAUSED && (
+          {/* Desktop: Mostrar todos los botones */}
+          <div className="hidden md:flex items-center gap-2">
+            {/* Restart Exercise Button */}
             <button
-              onClick={handlePauseResume}
-              className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 transition flex items-center justify-center"
-              title="Pausar"
+              onClick={handleRestartExercise}
+              className="w-12 h-12 rounded-full bg-orange-500/20 hover:bg-orange-500/30 transition flex items-center justify-center border border-orange-500/40"
+              title="Reiniciar ejercicio actual"
             >
-              <FontAwesomeIcon icon={faPause} className="text-lg" />
+              <FontAwesomeIcon icon={faArrowRotateLeft} className="text-lg text-orange-400" />
             </button>
-          )}
 
-          <button
-            onClick={handleExit}
-            className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 transition flex items-center justify-center"
-            title="Salir"
-          >
-            <FontAwesomeIcon icon={faXmark} className="text-xl" />
-          </button>
+            {/* Restart Routine Button */}
+            <button
+              onClick={handleRestartRoutine}
+              className="w-12 h-12 rounded-full bg-red-500/20 hover:bg-red-500/30 transition flex items-center justify-center border border-red-500/40"
+              title="Reiniciar toda la rutina"
+            >
+              <FontAwesomeIcon icon={faRotateRight} className="text-lg text-red-400" />
+            </button>
+
+            {state.status !== 'resting' && state.status !== WorkoutStatus.PAUSED && (
+              <button
+                onClick={handlePauseResume}
+                className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 transition flex items-center justify-center"
+                title="Pausar"
+              >
+                <FontAwesomeIcon icon={faPause} className="text-lg" />
+              </button>
+            )}
+
+            <button
+              onClick={handleExit}
+              className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 transition flex items-center justify-center"
+              title="Salir"
+            >
+              <FontAwesomeIcon icon={faXmark} className="text-xl" />
+            </button>
+          </div>
+
+          {/* Mobile: Botón de menú */}
+          <div className="relative md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 transition flex items-center justify-center"
+              title="Menú"
+            >
+              <FontAwesomeIcon icon={faEllipsisVertical} className="text-xl" />
+            </button>
+
+            {/* Dropdown Menu */}
+            {isMenuOpen && (
+              <div className="absolute right-0 top-14 bg-slate-800 rounded-2xl shadow-2xl border border-white/10 py-2 w-56 z-50">
+                <button
+                  onClick={() => {
+                    handleRestartExercise();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full px-4 py-3 text-left hover:bg-white/10 transition flex items-center gap-3"
+                >
+                  <FontAwesomeIcon icon={faArrowRotateLeft} className="text-orange-400" />
+                  <span>Reiniciar ejercicio</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    handleRestartRoutine();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full px-4 py-3 text-left hover:bg-white/10 transition flex items-center gap-3"
+                >
+                  <FontAwesomeIcon icon={faRotateRight} className="text-red-400" />
+                  <span>Reiniciar rutina</span>
+                </button>
+
+                {state.status !== 'resting' && state.status !== WorkoutStatus.PAUSED && (
+                  <button
+                    onClick={() => {
+                      handlePauseResume();
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-white/10 transition flex items-center gap-3"
+                  >
+                    <FontAwesomeIcon icon={faPause} />
+                    <span>Pausar</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => {
+                    handleExit();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full px-4 py-3 text-left hover:bg-white/10 transition flex items-center gap-3 border-t border-white/10 mt-2 pt-3"
+                >
+                  <FontAwesomeIcon icon={faXmark} />
+                  <span>Salir</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -620,6 +711,17 @@ export function WorkoutSessionPage() {
         </button>
       )}
 
+      {/* Floating Previous Exercise Button - Center Left */}
+      {state.status === WorkoutStatus.IN_PROGRESS && state.currentExerciseIndex > 0 && (
+        <button
+          onClick={handleGoToPrevious}
+          className="fixed left-6 top-1/2 -translate-y-1/2 z-50 w-14 h-14 rounded-full bg-slate-600 hover:bg-slate-700 shadow-lg flex items-center justify-center transition-all hover:scale-110"
+          title="Ejercicio anterior"
+        >
+          <FontAwesomeIcon icon={faBackward} className="text-xl" />
+        </button>
+      )}
+
       {/* Floating Skip/Next Button - Center Right */}
       {state.status === WorkoutStatus.IN_PROGRESS && !isLastExercise() && (
         <button
@@ -628,6 +730,17 @@ export function WorkoutSessionPage() {
           title="Siguiente ejercicio"
         >
           <FontAwesomeIcon icon={faForward} className="text-xl" />
+        </button>
+      )}
+
+      {/* Floating Finish Button - Center Right (Last Exercise) */}
+      {state.status === WorkoutStatus.IN_PROGRESS && isLastExercise() && (
+        <button
+          onClick={handleFinishWorkout}
+          className="fixed right-6 top-1/2 -translate-y-1/2 z-50 w-14 h-14 rounded-full bg-green-600 hover:bg-green-700 shadow-lg flex items-center justify-center transition-all hover:scale-110"
+          title="Finalizar entrenamiento"
+        >
+          <FontAwesomeIcon icon={faCheck} className="text-xl" />
         </button>
       )}
 
@@ -678,6 +791,28 @@ export function WorkoutSessionPage() {
         confirmLabel="Saltar"
         cancelLabel="Cancelar"
         confirmTone="danger"
+      />
+
+      <ConfirmModal
+        isOpen={showFinishModal}
+        onClose={() => setShowFinishModal(false)}
+        onConfirm={confirmFinishWorkout}
+        title="¿Finalizar entrenamiento?"
+        description="Se completará el entrenamiento y podrás ver el resumen."
+        confirmLabel="Finalizar"
+        cancelLabel="Continuar entrenando"
+        confirmTone="primary"
+      />
+
+      <ConfirmModal
+        isOpen={showPreviousModal}
+        onClose={() => setShowPreviousModal(false)}
+        onConfirm={confirmGoToPrevious}
+        title="¿Volver al ejercicio anterior?"
+        description="Regresarás al ejercicio anterior y comenzarás desde la primera serie."
+        confirmLabel="Volver"
+        cancelLabel="Cancelar"
+        confirmTone="primary"
       />
 
       <ConfirmModal
@@ -743,6 +878,16 @@ function TimerDisplayFullscreen({
     return () => clearInterval(interval);
   }, [isRunning, timeRemaining, onComplete]);
 
+  const handleRestart = () => {
+    setTimeRemaining(durationSeconds);
+    setIsRunning(true);
+  };
+
+  const handleSkipToNext = () => {
+    setIsRunning(false);
+    onComplete();
+  };
+
   const progress = ((durationSeconds - timeRemaining) / durationSeconds) * 100;
 
   return (
@@ -758,13 +903,35 @@ function TimerDisplayFullscreen({
         />
       </div>
 
-      <button
-        onClick={() => setIsRunning(!isRunning)}
-        className="btn-primary px-6 py-3 text-lg"
-      >
-        <FontAwesomeIcon icon={isRunning ? faPause : faPlay} className="mr-2" />
-        {isRunning ? 'Pausar' : 'Continuar'}
-      </button>
+      {/* Botones de control */}
+      <div className="space-y-3">
+        {/* Botón principal: Pausar/Continuar */}
+        <button
+          onClick={() => setIsRunning(!isRunning)}
+          className="w-full btn-primary px-6 py-4 text-xl"
+        >
+          <FontAwesomeIcon icon={isRunning ? faPause : faPlay} className="mr-2" />
+          {isRunning ? 'Pausar' : 'Continuar'}
+        </button>
+
+        {/* Botones secundarios lado a lado */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button
+            onClick={handleRestart}
+            className="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-4 rounded-2xl text-base transition-all border border-white/20 flex items-center justify-center gap-2"
+          >
+            <FontAwesomeIcon icon={faRotateRight} />
+            Reiniciar
+          </button>
+          <button
+            onClick={handleSkipToNext}
+            className="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-4 rounded-2xl text-base transition-all border border-white/20 flex items-center justify-center gap-2"
+          >
+            <FontAwesomeIcon icon={faForward} />
+            Siguiente Serie
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -781,6 +948,7 @@ function RepsDisplayFullscreen({
 }) {
   const [reps, setReps] = useState(targetReps || 0);
   const [weight, setWeight] = useState('');
+  const [isWeightExpanded, setIsWeightExpanded] = useState(false);
 
   const handleComplete = () => {
     onComplete({
@@ -802,17 +970,32 @@ function RepsDisplayFullscreen({
         />
       </div>
 
-      <div className="space-y-3">
-        <label className="text-xl text-slate-300 block">Peso (kg) - Opcional</label>
-        <input
-          type="number"
-          value={weight}
-          onChange={(e) => setWeight(e.target.value)}
-          placeholder="0"
-          className="w-full bg-white/10 border-2 border-white/20 rounded-2xl px-6 py-3 text-3xl md:text-4xl font-bold text-center focus:outline-none focus:border-white/40"
-          step="0.5"
-          min="0"
-        />
+      {/* Accordion para Peso */}
+      <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
+        <button
+          onClick={() => setIsWeightExpanded(!isWeightExpanded)}
+          className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
+        >
+          <span className="text-lg text-slate-300">Peso (kg) - Opcional</span>
+          <FontAwesomeIcon
+            icon={isWeightExpanded ? faChevronUp : faChevronDown}
+            className="text-slate-400"
+          />
+        </button>
+
+        {isWeightExpanded && (
+          <div className="px-4 pb-4">
+            <input
+              type="number"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              placeholder="0"
+              className="w-full bg-white/10 border-2 border-white/20 rounded-2xl px-6 py-3 text-3xl md:text-4xl font-bold text-center focus:outline-none focus:border-white/40"
+              step="0.5"
+              min="0"
+            />
+          </div>
+        )}
       </div>
 
       <button

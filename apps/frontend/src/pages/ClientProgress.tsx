@@ -17,6 +17,7 @@ import {
   faEdit,
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../context/AuthContext';
+import { useAlert } from '../context/AlertContext';
 import { apiFetch } from '../lib/api';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import { MeasurementHistory } from '../components/measurements/MeasurementHistory';
@@ -46,6 +47,7 @@ type WorkoutHistory = {
 export function ClientProgressPage() {
   const { clientId } = useParams<{ clientId: string }>();
   const { token } = useAuth();
+  const { showToast, confirm, alert: showAlert } = useAlert();
   const [client, setClient] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<ProgressStats | null>(null);
   const [history, setHistory] = useState<WorkoutHistory[]>([]);
@@ -80,18 +82,109 @@ export function ClientProgressPage() {
       setPrograms(programsData);
       setRoutines(routinesData);
 
-      // TODO: Fetch progress stats and history
-      const statsData: ProgressStats = {
-        totalWorkouts: 0,
-        currentStreak: 0,
-        longestStreak: 0,
-        totalWeeks: 0,
-        averageWorkoutsPerWeek: 0,
-      };
-      const historyData: WorkoutHistory[] = [];
+      // Fetch workout history for the client
+      try {
+        const response = await apiFetch<{ data: any[] }>(
+          `/workouts/clients/${clientId}/history?status=completed&limit=100`,
+          { token }
+        );
 
-      setStats(statsData);
-      setHistory(historyData);
+        const clientSessions = response.data || [];
+
+        // Map to WorkoutHistory format
+        const historyData: WorkoutHistory[] = clientSessions.map((session) => ({
+          id: session.id,
+          date: session.completedAt || session.startedAt,
+          routineName: session.routine?.name || 'Rutina sin nombre',
+          duration: Math.round((session.totalDurationSeconds || 0) / 60),
+          exercisesCompleted: session.routine?.exercises?.length || 0,
+          calories: session.routine?.estimatedCalories,
+        }));
+
+        // Calculate statistics (same logic as MyProgress)
+        const totalWorkouts = clientSessions.length;
+
+        // Calculate streaks
+        const dates = clientSessions
+          .map((s) => new Date(s.completedAt || s.startedAt))
+          .sort((a, b) => b.getTime() - a.getTime());
+
+        let currentStreak = 0;
+        let longestStreak = 0;
+        let tempStreak = 0;
+        let lastDate: Date | null = null;
+
+        for (const date of dates) {
+          const dateStr = date.toDateString();
+
+          if (!lastDate) {
+            const today = new Date().toDateString();
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toDateString();
+
+            if (dateStr === today || dateStr === yesterdayStr) {
+              currentStreak = 1;
+            }
+            tempStreak = 1;
+          } else {
+            const diffDays = Math.floor(
+              (lastDate.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
+            );
+
+            if (diffDays === 1) {
+              tempStreak++;
+              if (currentStreak > 0) {
+                currentStreak++;
+              }
+            } else {
+              longestStreak = Math.max(longestStreak, tempStreak);
+              tempStreak = 1;
+              currentStreak = 0;
+            }
+          }
+
+          lastDate = date;
+        }
+        longestStreak = Math.max(longestStreak, tempStreak);
+
+        // Calculate total weeks with at least one workout
+        const weeks = new Set(
+          dates.map((date) => {
+            const weekStart = new Date(date);
+            const day = weekStart.getDay();
+            const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1);
+            weekStart.setDate(diff);
+            return weekStart.toDateString();
+          })
+        );
+        const totalWeeks = weeks.size;
+
+        // Calculate average workouts per week
+        const averageWorkoutsPerWeek = totalWeeks > 0 ? totalWorkouts / totalWeeks : 0;
+
+        const statsData: ProgressStats = {
+          totalWorkouts,
+          currentStreak,
+          longestStreak,
+          totalWeeks,
+          averageWorkoutsPerWeek,
+        };
+
+        setStats(statsData);
+        setHistory(historyData);
+      } catch (historyError) {
+        console.error('Error fetching workout history:', historyError);
+        // Set empty stats if history fetch fails
+        setStats({
+          totalWorkouts: 0,
+          currentStreak: 0,
+          longestStreak: 0,
+          totalWeeks: 0,
+          averageWorkoutsPerWeek: 0,
+        });
+        setHistory([]);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar datos del cliente');
     } finally {
@@ -124,7 +217,15 @@ export function ClientProgressPage() {
   };
 
   const handleExtendSubscription = async (days: number) => {
-    if (!client || !confirm(`¿Extender la suscripción por ${days} días?`)) return;
+    if (!client) return;
+
+    const confirmed = await confirm({
+      title: 'Extender suscripción',
+      message: `¿Extender la suscripción por ${days} días?`,
+      confirmText: 'Extender',
+    });
+
+    if (!confirmed) return;
 
     try {
       const currentEndDate = client.subscriptionEndDate
@@ -143,15 +244,27 @@ export function ClientProgressPage() {
         token,
       });
 
-      alert(`Suscripción extendida por ${days} días exitosamente`);
+      showToast(`Suscripción extendida por ${days} días exitosamente`, 'success');
       fetchClientData();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al extender suscripción');
+      await showAlert({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Error al extender suscripción',
+      });
     }
   };
 
   const handleCancelSubscription = async () => {
-    if (!client || !confirm(`¿Cancelar la suscripción? El cliente perderá acceso inmediatamente.`)) return;
+    if (!client) return;
+
+    const confirmed = await confirm({
+      title: 'Cancelar suscripción',
+      message: '¿Cancelar la suscripción? El cliente perderá acceso inmediatamente.',
+      confirmText: 'Cancelar suscripción',
+      type: 'danger',
+    });
+
+    if (!confirmed) return;
 
     try {
       await apiFetch(`/trainer/clients/${client.id}/subscription`, {
@@ -164,10 +277,13 @@ export function ClientProgressPage() {
         token,
       });
 
-      alert('Suscripción cancelada exitosamente');
+      showToast('Suscripción cancelada exitosamente', 'success');
       fetchClientData();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al cancelar suscripción');
+      await showAlert({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Error al cancelar suscripción',
+      });
     }
   };
 
@@ -201,10 +317,13 @@ export function ClientProgressPage() {
         token,
       });
       setShowEditSubscription(false);
-      alert('Suscripción actualizada exitosamente');
+      showToast('Suscripción actualizada exitosamente', 'success');
       fetchClientData();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al actualizar suscripción');
+      await showAlert({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Error al actualizar suscripción',
+      });
     } finally {
       setSaving(false);
     }

@@ -14,8 +14,11 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { UserProfile } from '../users/entities/user.entity';
+import { UserRole } from '../users/entities/user.entity';
 import { WorkoutsService } from './workouts.service';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
@@ -82,6 +85,27 @@ export class WorkoutsController {
     @CurrentUser() user: UserProfile,
   ) {
     return this.workoutsService.getHistory(queryDto, user);
+  }
+
+  @Get('clients/:clientId/history')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.TRAINER, UserRole.ADMIN)
+  async getClientHistory(
+    @Param('clientId') clientId: string,
+    @Query() queryDto: QuerySessionsDto,
+    @CurrentUser() user: UserProfile,
+  ) {
+    return this.workoutsService.getClientHistory(clientId, queryDto, user);
+  }
+
+  @Get('all-clients/history')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.TRAINER, UserRole.ADMIN)
+  async getAllClientsHistory(
+    @Query() queryDto: QuerySessionsDto,
+    @CurrentUser() user: UserProfile,
+  ) {
+    return this.workoutsService.getAllClientsHistory(queryDto, user);
   }
 
   @Post('sessions/:sessionId/photos')

@@ -6,8 +6,11 @@ import {
   faListCheck,
   faCalendarDays,
   faUsers,
+  faCheckCircle,
+  faClock,
 } from '@fortawesome/free-solid-svg-icons';
 import type { UserProfile } from '../../types/auth';
+import type { WorkoutSession } from '../../types/workouts';
 import { apiFetch } from '../../lib/api';
 import StatCard from './StatCard';
 import QuickActionCard from './QuickActionCard';
@@ -28,10 +31,12 @@ interface TrainerStats {
 export default function TrainerDashboard({ user, token }: TrainerDashboardProps) {
   const navigate = useNavigate();
   const [stats, setStats] = useState<TrainerStats | null>(null);
+  const [recentActivity, setRecentActivity] = useState<WorkoutSession[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchStats();
+    fetchRecentActivity();
   }, []);
 
   const fetchStats = async () => {
@@ -62,6 +67,19 @@ export default function TrainerDashboard({ user, token }: TrainerDashboardProps)
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRecentActivity = async () => {
+    try {
+      const response = await apiFetch<{ data: WorkoutSession[] }>(
+        '/workouts/all-clients/history?status=completed&limit=10',
+        { token }
+      );
+      setRecentActivity(response.data || []);
+    } catch (err) {
+      console.error('Error fetching recent activity:', err);
+      setRecentActivity([]);
     }
   };
 
@@ -141,23 +159,65 @@ export default function TrainerDashboard({ user, token }: TrainerDashboardProps)
         </div>
       </div>
 
-      {/* Recent Activity Section - Placeholder */}
+      {/* Recent Activity Section */}
       <div>
         <h2 className="text-xl font-semibold text-slate-900 mb-4">
           Actividad reciente
         </h2>
         <div className="card">
-          <div className="flex items-center justify-center py-8">
-            <div className="text-center">
-              <FontAwesomeIcon
-                icon={faListCheck}
-                className="text-4xl text-slate-300 mb-3"
-              />
-              <p className="text-sm text-slate-600">
-                La actividad reciente se mostrará aquí
-              </p>
+          {recentActivity.length === 0 ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <FontAwesomeIcon
+                  icon={faListCheck}
+                  className="text-4xl text-slate-300 mb-3"
+                />
+                <p className="text-sm text-slate-600">
+                  No hay actividad reciente de tus clientes
+                </p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {recentActivity.map((session) => (
+                <div
+                  key={session.id}
+                  className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-white font-semibold">
+                      {session.user?.name?.[0]?.toUpperCase() || 'U'}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-slate-900">
+                          {session.user?.name || 'Usuario'}
+                        </h3>
+                        <FontAwesomeIcon
+                          icon={faCheckCircle}
+                          className="text-green-600 text-sm"
+                        />
+                      </div>
+                      <p className="text-sm text-slate-600">
+                        {session.routine?.name || 'Entrenamiento'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-6 text-sm">
+                    <div className="text-right">
+                      <p className="text-slate-600 flex items-center gap-1">
+                        <FontAwesomeIcon icon={faClock} />
+                        {Math.round((session.totalDurationSeconds || 0) / 60)} min
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {new Date(session.completedAt || session.startedAt).toLocaleDateString('es-ES')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

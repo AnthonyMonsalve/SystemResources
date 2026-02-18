@@ -14,6 +14,7 @@ import {
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../context/AuthContext';
+import { useAlert } from '../context/AlertContext';
 import { apiFetch } from '../lib/api';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
@@ -29,6 +30,7 @@ type ClientWithProgram = UserProfile & {
 
 export function MyClientsPage() {
   const { token } = useAuth();
+  const { showToast, confirm, alert: showAlert } = useAlert();
   const [clients, setClients] = useState<ClientWithProgram[]>([]);
   const [expiringSoon, setExpiringSoon] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,12 +80,16 @@ export function MyClientsPage() {
       });
       setShowInviteModal(false);
       setInviteEmail('');
-      alert(
-        `Cliente invitado exitosamente.\n\nSe ha creado una cuenta para ${inviteEmail}.\nLa contraseña temporal se encuentra en los logs del servidor.`
-      );
+      await showAlert({
+        type: 'success',
+        message: `Cliente invitado exitosamente.\n\nSe ha creado una cuenta para ${inviteEmail}.\nLa contraseña temporal se encuentra en los logs del servidor.`,
+      });
       fetchClients();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al enviar invitación');
+      await showAlert({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Error al enviar invitación',
+      });
     } finally {
       setInviting(false);
     }
@@ -168,10 +174,13 @@ export function MyClientsPage() {
         token,
       });
       setShowSubModal(false);
-      alert('Suscripción actualizada exitosamente');
+      showToast('Suscripción actualizada exitosamente', 'success');
       fetchClients();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al actualizar suscripción');
+      await showAlert({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Error al actualizar suscripción',
+      });
     } finally {
       setSaving(false);
     }
@@ -196,19 +205,25 @@ export function MyClientsPage() {
         token,
       });
 
-      alert(`Suscripción extendida por ${days} días`);
+      showToast(`Suscripción extendida por ${days} días`, 'success');
       fetchClients();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al extender suscripción');
+      await showAlert({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Error al extender suscripción',
+      });
     }
   };
 
   const handleCancelSubscription = async (client: ClientWithProgram) => {
-    if (
-      !confirm(
-        `¿Cancelar la suscripción de ${client.name || client.email}? El cliente perderá acceso.`
-      )
-    ) {
+    const confirmed = await confirm({
+      title: 'Cancelar suscripción',
+      message: `¿Cancelar la suscripción de ${client.name || client.email}? El cliente perderá acceso.`,
+      confirmText: 'Cancelar suscripción',
+      type: 'danger',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -224,10 +239,13 @@ export function MyClientsPage() {
         token,
       });
 
-      alert('Suscripción cancelada');
+      showToast('Suscripción cancelada', 'success');
       fetchClients();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al cancelar suscripción');
+      await showAlert({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Error al cancelar suscripción',
+      });
     }
   };
 

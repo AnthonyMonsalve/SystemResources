@@ -29,6 +29,11 @@ export interface WorkoutSession {
   currentSetNumber: number;
   notes?: string;
   routine?: Routine;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+  };
   sets: ExerciseSet[];
   comments: WorkoutComment[];
   createdAt: string;

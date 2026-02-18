@@ -6,11 +6,13 @@ import { WorkoutComment } from './entities/workout-comment.entity';
 import { WorkoutsService } from './workouts.service';
 import { WorkoutsController } from './workouts.controller';
 import { RoutinesModule } from '../routines/routines.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([WorkoutSession, ExerciseSet, WorkoutComment]),
     RoutinesModule,
+    UsersModule,
   ],
   controllers: [WorkoutsController],
   providers: [WorkoutsService],

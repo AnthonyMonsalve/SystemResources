@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '../../lib/api';
 import type { BodyMeasurement, CreateMeasurementDto } from '../../types/measurements';
 import { MeasurementCharts } from './MeasurementCharts';
+import { useAlert } from '../../context/AlertContext';
 
 type MeasurementHistoryProps = {
   token: string;
@@ -385,6 +386,7 @@ export function MeasurementHistory({
   isClient,
   clientId,
 }: MeasurementHistoryProps) {
+  const { confirm, alert: showAlert } = useAlert();
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -413,7 +415,14 @@ export function MeasurementHistory({
   }, [token, isClient, clientId]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar esta medición?')) return;
+    const confirmed = await confirm({
+      title: 'Eliminar medición',
+      message: '¿Estás seguro de eliminar esta medición?',
+      confirmText: 'Eliminar',
+      type: 'danger',
+    });
+
+    if (!confirmed) return;
 
     try {
       await apiFetch(`/measurements/${id}`, {
@@ -423,7 +432,10 @@ export function MeasurementHistory({
       setMeasurements(measurements.filter((m) => m.id !== id));
     } catch (error) {
       console.error('Error deleting measurement:', error);
-      alert('Error al eliminar la medición');
+      await showAlert({
+        type: 'error',
+        message: 'Error al eliminar la medición',
+      });
     }
   };
 

@@ -12,6 +12,7 @@ import {
 import { formatTime } from '../../types/workouts';
 import type { WorkoutSession } from '../../types/workouts';
 import { compressImages, formatFileSize } from '../../lib/imageCompression';
+import { useAlert } from '../../context/AlertContext';
 
 interface WorkoutSummaryProps {
   session: WorkoutSession;
@@ -20,6 +21,7 @@ interface WorkoutSummaryProps {
 }
 
 export function WorkoutSummary({ session, onComplete, onSkip }: WorkoutSummaryProps) {
+  const { alert: showAlert } = useAlert();
   const [notes, setNotes] = useState('');
   const [photos, setPhotos] = useState<{ blob: Blob; filename: string; originalSize: number; compressedSize: number }[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
@@ -63,7 +65,10 @@ export function WorkoutSummary({ session, onComplete, onSkip }: WorkoutSummaryPr
       e.target.value = '';
     } catch (error) {
       console.error('Error compressing images:', error);
-      alert('Error al comprimir las imágenes. Por favor, intenta con otras fotos.');
+      await showAlert({
+        type: 'error',
+        message: 'Error al comprimir las imágenes. Por favor, intenta con otras fotos.',
+      });
     } finally {
       setIsCompressing(false);
     }

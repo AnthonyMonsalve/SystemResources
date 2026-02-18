@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import type { UserProfile } from '../users/entities/user.entity';
+import { UsersService } from '../users/users.service';
 import { RoutinesService } from '../routines/routines.service';
 import { WorkoutSession, WorkoutStatus } from './entities/workout-session.entity';
 import { ExerciseSet } from './entities/exercise-set.entity';
@@ -27,6 +28,7 @@ export class WorkoutsService {
     @InjectRepository(WorkoutComment)
     private commentsRepository: Repository<WorkoutComment>,
     private routinesService: RoutinesService,
+    private usersService: UsersService,
   ) {}
 
   async createSession(
@@ -313,5 +315,68 @@ export class WorkoutsService {
     await this.sessionsRepository.save(session);
 
     return session;
+  }
+
+  async getClientHistory(
+    clientId: string,
+    queryDto: QuerySessionsDto,
+    trainer: UserProfile,
+  ): Promise<{ data: WorkoutSession[]; total: number; page: number; limit: number }> {
+    // Verify that the client belongs to this trainer
+    await this.usersService.findClientById(clientId, trainer.id);
+
+    const { status, page = 1, limit = 20 } = queryDto;
+
+    const queryBuilder = this.sessionsRepository
+      .createQueryBuilder('session')
+      .where('session.userId = :userId', { userId: clientId })
+      .leftJoinAndSelect('session.routine', 'routine')
+      .leftJoinAndSelect('session.sets', 'sets')
+      .orderBy('session.startedAt', 'DESC');
+
+    if (status) {
+      queryBuilder.andWhere('session.status = :status', { status });
+    }
+
+    const [data, total] = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    return { data, total, page, limit };
+  }
+
+  async getAllClientsHistory(
+    queryDto: QuerySessionsDto,
+    trainer: UserProfile,
+  ): Promise<{ data: WorkoutSession[]; total: number; page: number; limit: number }> {
+    // Get all clients of this trainer
+    const clients = await this.usersService.findClientsByTrainerId(trainer.id);
+    const clientIds = clients.map((client) => client.id);
+
+    if (clientIds.length === 0) {
+      return { data: [], total: 0, page: 1, limit: queryDto.limit || 20 };
+    }
+
+    const { status, page = 1, limit = 20 } = queryDto;
+
+    const queryBuilder = this.sessionsRepository
+      .createQueryBuilder('session')
+      .where('session.userId IN (:...clientIds)', { clientIds })
+      .leftJoinAndSelect('session.routine', 'routine')
+      .leftJoinAndSelect('session.user', 'user')
+      .leftJoinAndSelect('session.sets', 'sets')
+      .orderBy('session.startedAt', 'DESC');
+
+    if (status) {
+      queryBuilder.andWhere('session.status = :status', { status });
+    }
+
+    const [data, total] = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    return { data, total, page, limit };
   }
 }

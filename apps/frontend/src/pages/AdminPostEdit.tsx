@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useAlert } from "../context/AlertContext";
 import { ApiError, apiFetch, apiUpload } from "../lib/api";
 import { WysiwygEditor } from "../shared/WysiwygEditor";
 import type {
@@ -74,6 +75,7 @@ const createMediaForm = (index: number): MediaFormState => ({
 
 export function AdminPostEditPage() {
   const { token, user, initializing } = useAuth();
+  const { confirm } = useAlert();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [groups, setGroups] = useState<AdminGroup[]>([]);
@@ -222,7 +224,12 @@ export function AdminPostEditPage() {
   };
 
   const deleteExistingMedia = async (media: PostMedia) => {
-    const confirmed = window.confirm("Eliminar este archivo?");
+    const confirmed = await confirm({
+      title: 'Eliminar archivo',
+      message: '¿Eliminar este archivo?',
+      confirmText: 'Eliminar',
+      type: 'danger',
+    });
     if (!confirmed) return;
     try {
       await apiFetch<void>(`/media/${media.id}`, { method: "DELETE", token });
